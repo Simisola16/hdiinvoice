@@ -96,11 +96,8 @@ const Dashboard = () => {
                 👤 Add User
               </button>
             )}
-            <button className="btn btn-secondary" onClick={() => setModal('addCompany')}>
-              🏢 Add Company
-            </button>
             <button className="btn btn-gold" onClick={() => setModal('generateInvoice')}>
-              📄 Generate Invoice
+              📄 Create Invoice
             </button>
           </div>
         </div>

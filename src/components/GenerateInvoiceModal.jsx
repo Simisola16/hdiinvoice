@@ -29,7 +29,7 @@ const convertLessThanOneThousand = (n) => {
     n %= 100;
   }
   if (n >= 20) {
-    str += tens[Math.floor(n / 100)] + ' ';
+    str += tens[Math.floor(n / 10)] + ' ';
     n %= 10;
   }
   if (n > 0) {
@@ -63,6 +63,9 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
   const [companySearch, setCompanySearch] = useState('');
   const [companyId, setCompanyId] = useState('');
   const [selectedCompany, setSelectedCompany] = useState(null);
+  const [address, setAddress] = useState('');
+  const [tel, setTel] = useState('');
+  const [contactPerson, setContactPerson] = useState('');
   const [vatPercent, setVatPercent] = useState('7.5');
   const [date, setDate] = useState(toInputDate(new Date()));
   const [items, setItems] = useState([{ description: 'HALAL CERTIFICATION', rate: '', qty: '1' }]);
@@ -144,7 +147,8 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
   // ── Submit ─────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!companyId) { setError('Please select a company.'); return; }
+    if (!companySearch.trim()) { setError('Please select or enter a client company.'); return; }
+    if (!address.trim()) { setError('Please provide a client address.'); return; }
 
     // Validate all items
     for (let i = 0; i < items.length; i++) {
@@ -170,6 +174,12 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
     try {
       const res = await createInvoice({
         companyId,
+        company: {
+          name: companySearch.trim(),
+          contact: address.trim(),
+          tel: tel.trim(),
+          contactPerson: contactPerson.trim()
+        },
         items: items.map(item => ({
           description: item.description.trim(),
           rate: parseFloat(item.rate),
@@ -219,7 +229,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
       <div className="modal modal-lg" style={{ maxWidth: '850px' }}>
         <div className="modal-header">
           <div className="modal-title">
-            <span>📄</span> Generate Invoice
+            <span>📄</span> Create Invoice
           </div>
           <button className="modal-close" onClick={onClose} aria-label="Close">×</button>
         </div>
@@ -228,7 +238,10 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
         <div style={styles.tabContainer}>
           <button
             type="button"
-            style={{ ...styles.tab, ...(activeTab === 'edit' ? styles.activeTab : {}) }}
+            style={{
+              ...styles.tab,
+              ...(activeTab === 'edit' ? { ...styles.activeTab, ...styles.yellowTab } : {})
+            }}
             onClick={() => setActiveTab('edit')}
           >
             ✏️ Edit Details
@@ -237,8 +250,12 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
             type="button"
             style={{ ...styles.tab, ...(activeTab === 'preview' ? styles.activeTab : {}) }}
             onClick={() => {
-              if (!companyId) {
+              if (!companySearch.trim()) {
                 setError('Please search and select a client company first.');
+                return;
+              }
+              if (!address.trim()) {
+                setError('Please enter client address to see preview.');
                 return;
               }
               // Basic item validation before letting them preview
@@ -295,6 +312,9 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                             setCompanyId(c._id);
                             setSelectedCompany(c);
                             setCompanySearch(c.name);
+                            setAddress(c.contact || '');
+                            setTel(c.tel || '');
+                            setContactPerson(c.contactPerson || '');
                             setCompanies([]);
                           }}
                         >
@@ -304,18 +324,72 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                       ))}
                     </div>
                   )}
-                  {companyId && (
+                  {companySearch && (
                     <div className="alert alert-success" style={{ marginTop: '6px', padding: '8px 12px' }}>
-                      ✓ Selected: <strong>{companySearch}</strong>
+                      ✓ Target Client: <strong>{companySearch}</strong>
                       <button
                         type="button"
                         style={styles.clearBtn}
-                        onClick={() => { setCompanyId(''); setSelectedCompany(null); setCompanySearch(''); loadCompanies(); }}
+                        onClick={() => {
+                          setCompanyId('');
+                          setSelectedCompany(null);
+                          setCompanySearch('');
+                          setAddress('');
+                          setTel('');
+                          setContactPerson('');
+                          loadCompanies();
+                        }}
                       >
                         ×
                       </button>
                     </div>
                   )}
+                </div>
+
+                {/* Company Address and Phone details */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'var(--gray-50)', padding: '16px', borderRadius: '8px', border: '1px solid var(--gray-200)', marginBottom: '16px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" htmlFor="addressInput">
+                      Address <span className="required">*</span>
+                    </label>
+                    <input
+                      id="addressInput"
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. PC 32 Church Gate Street, Lagos Island"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" htmlFor="telInput">
+                      Tel / Phone
+                    </label>
+                    <input
+                      id="telInput"
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. 08012345678"
+                      value={tel}
+                      onChange={(e) => setTel(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0, gridColumn: 'span 2', marginTop: '12px' }}>
+                    <label className="form-label" htmlFor="contactPersonInput">
+                      Contact Person
+                    </label>
+                    <input
+                      id="contactPersonInput"
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. Mr. Abdullahi Yusuf"
+                      value={contactPerson}
+                      onChange={(e) => setContactPerson(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
                 </div>
 
                 {/* Service Line Items */}
@@ -470,7 +544,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                 {/* ── Header ── */}
                 <div style={styles.pvHeader}>
                   <div style={styles.pvLogoBlock}>
-                    <img src="/hcaLogo.png" alt="HCA Crest" style={styles.pvLogoImg} />
+                     <img src="/hcaLogo.png" alt="HCA Crest" style={styles.pvLogoImg} />
                   </div>
                   <div style={styles.pvHeaderText}>
                     <div style={styles.pvHeaderArabic}>هيئة ترخيص منتجات الحلال</div>
@@ -503,16 +577,16 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                 <div style={styles.pvClientSection}>
                   <div style={styles.pvClientRow}>
                     <span style={styles.pvClientLabel}>Client:</span>
-                    <span style={styles.pvClientValue}>{selectedCompany?.name || companySearch || '—'}</span>
+                    <span style={styles.pvClientValue}>{companySearch || '—'}</span>
                   </div>
                   <div style={styles.pvClientRow}>
-                    <span style={styles.pvClientLabel}>Contact:</span>
-                    <span style={styles.pvClientValue}>{selectedCompany?.contact || '—'}</span>
+                    <span style={styles.pvClientLabel}>Address:</span>
+                    <span style={styles.pvClientValue}>{address || '—'}</span>
                   </div>
                   <div style={styles.pvClientRow}>
                     <div style={{ display: 'flex', flex: 1, gap: '16px', alignItems: 'baseline' }}>
                       <span style={styles.pvClientLabel}>Tel:</span>
-                      <span style={{ ...styles.pvClientValue, flex: 1.5 }}>{selectedCompany?.tel || '—'}</span>
+                      <span style={{ ...styles.pvClientValue, flex: 1.5 }}>{tel || '—'}</span>
                       <span style={{ ...styles.pvClientLabel, minWidth: 'auto', marginLeft: 'auto' }}>Date:</span>
                       <span style={{ ...styles.pvClientValue, flex: 1 }}>{formatDatePreview(date)}</span>
                     </div>
@@ -533,7 +607,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                     </thead>
                     <tbody>
                       {items.map((item, idx) => (
-                        <tr key={idx} style={{ height: '24px' }}>
+                        <tr style={{ height: '24px' }} key={idx}>
                           <td style={styles.pvTd}>{idx + 1}.</td>
                           <td style={{ ...styles.pvTd, textAlign: 'left', paddingLeft: '8px' }}>{item.description}</td>
                           <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px' }}>{fmt(parseFloat(item.rate) || 0)}</td>
@@ -597,10 +671,21 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
+            <button
+              type="button"
+              className="btn"
+              onClick={onClose}
+              disabled={loading}
+              style={styles.cancelBtn}
+            >
               Cancel
             </button>
-            <button type="submit" className="btn btn-gold" disabled={loading}>
+            <button
+              type="submit"
+              className="btn"
+              disabled={loading}
+              style={styles.generateBtn}
+            >
               {loading
                 ? <><div className="spinner spinner-sm" /> Generating PDF…</>
                 : '📥 Generate & Download PDF'}
@@ -634,6 +719,12 @@ const styles = {
     color: 'var(--hca-green)',
     borderBottomColor: 'var(--hca-green)',
     background: '#fff',
+  },
+  yellowTab: {
+    background: '#f1c40f',
+    color: '#1e4620',
+    borderBottomColor: '#f1c40f',
+    borderRadius: '4px 4px 0 0',
   },
   dropdown: {
     border: '1.5px solid var(--gray-200)',
@@ -901,6 +992,27 @@ const styles = {
     fontWeight: 'bold',
     marginTop: '12px',
     borderRadius: '4px',
+  },
+  cancelBtn: {
+    backgroundColor: '#c62828',
+    color: '#fff',
+    borderColor: '#c62828',
+    marginRight: 'auto',
+    padding: '10px 20px',
+    fontWeight: 'bold',
+    fontSize: '13px',
+    cursor: 'pointer',
+    borderRadius: 'var(--radius-sm)',
+  },
+  generateBtn: {
+    backgroundColor: '#2e7d32',
+    color: '#fff',
+    borderColor: '#2e7d32',
+    padding: '10px 20px',
+    fontWeight: 'bold',
+    fontSize: '13px',
+    cursor: 'pointer',
+    borderRadius: 'var(--radius-sm)',
   },
 };
 
