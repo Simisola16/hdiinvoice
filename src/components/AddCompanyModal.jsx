@@ -1,13 +1,13 @@
 /**
  * AddCompanyModal
  * Modal form to add a new client company.
- * Fields: Company Name, Contact (address), Tel.
+ * Fields: Company Name, Address, Contact Person, Tel.
  */
 import { useState } from 'react';
 import { createCompany, getErrorMessage } from '../api';
 
 const AddCompanyModal = ({ onClose, onSuccess }) => {
-  const [form, setForm] = useState({ name: '', contact: '', tel: '' });
+  const [form, setForm] = useState({ name: '', contact: '', contactPerson: '', tel: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -26,6 +26,7 @@ const AddCompanyModal = ({ onClose, onSuccess }) => {
       const res = await createCompany(form);
       onSuccess(res.data.company);
       onClose();
+    } catch (err) {
       setError(getErrorMessage(err, 'Failed to add company.'));
     } finally {
       setLoading(false);
@@ -63,7 +64,7 @@ const AddCompanyModal = ({ onClose, onSuccess }) => {
 
             <div className="form-group">
               <label className="form-label" htmlFor="contact">
-                Contact / Address
+                Address
               </label>
               <input
                 id="contact"
@@ -72,6 +73,22 @@ const AddCompanyModal = ({ onClose, onSuccess }) => {
                 className="form-input"
                 placeholder="e.g. PC 32 Church Gate Street, Lagos Island"
                 value={form.contact}
+                onChange={handleChange}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="contactPerson">
+                Contact Person
+              </label>
+              <input
+                id="contactPerson"
+                name="contactPerson"
+                type="text"
+                className="form-input"
+                placeholder="e.g. Mr. Abdullahi Yusuf"
+                value={form.contactPerson}
                 onChange={handleChange}
                 disabled={loading}
               />
