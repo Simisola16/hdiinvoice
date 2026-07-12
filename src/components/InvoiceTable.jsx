@@ -19,7 +19,7 @@ const InvoiceTable = ({ refreshKey }) => {
   const [loading, setLoading]       = useState(false);
   const [downloading, setDownloading] = useState(null); // invoice id being downloaded
   const [filters, setFilters]       = useState({
-    dateFrom: '', dateTo: '', amountMin: '', amountMax: '', companyName: '',
+    dateFrom: '', dateTo: '', amount: '', companyName: '',
   });
 
   const fetchInvoices = useCallback(async () => {
@@ -28,8 +28,7 @@ const InvoiceTable = ({ refreshKey }) => {
       const params = {};
       if (filters.dateFrom)    params.dateFrom    = filters.dateFrom;
       if (filters.dateTo)      params.dateTo      = filters.dateTo;
-      if (filters.amountMin)   params.amountMin   = filters.amountMin;
-      if (filters.amountMax)   params.amountMax   = filters.amountMax;
+      if (filters.amount)      params.amount      = filters.amount;
       if (filters.companyName) params.companyName = filters.companyName;
       const res = await getInvoices(params);
       setInvoices(res.data);
@@ -46,7 +45,7 @@ const InvoiceTable = ({ refreshKey }) => {
     setFilters((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const clearFilters = () =>
-    setFilters({ dateFrom: '', dateTo: '', amountMin: '', amountMax: '', companyName: '' });
+    setFilters({ dateFrom: '', dateTo: '', amount: '', companyName: '' });
 
   const handleDownload = async (invoice) => {
     setDownloading(invoice._id);
@@ -107,24 +106,13 @@ const InvoiceTable = ({ refreshKey }) => {
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
-            <label className="form-label">Min Amount (₦)</label>
+            <label className="form-label">Amount (₦)</label>
             <input
-              name="amountMin"
+              name="amount"
               type="number"
               className="form-input"
-              placeholder="0"
-              value={filters.amountMin}
-              onChange={handleFilterChange}
-            />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
-            <label className="form-label">Max Amount (₦)</label>
-            <input
-              name="amountMax"
-              type="number"
-              className="form-input"
-              placeholder="Any"
-              value={filters.amountMax}
+              placeholder="Amount"
+              value={filters.amount}
               onChange={handleFilterChange}
             />
           </div>
