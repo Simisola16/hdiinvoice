@@ -56,7 +56,9 @@ const Dashboard = () => {
       {/* ── Navbar ─────────────────────────────────────────────────────────── */}
       <nav style={styles.navbar}>
         <div style={styles.navBrand}>
-          <div style={styles.navLogo}>HCA</div>
+          <div style={styles.navLogo}>
+            <img src="/hcaLogo.png" alt="HCA Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
           <div>
             <div style={styles.navTitle}>HALAL CERTIFICATION AUTHORITY</div>
             <div style={styles.navSub}>Invoice Management System</div>
@@ -188,16 +190,12 @@ const styles = {
     width: '40px',
     height: '40px',
     borderRadius: '50%',
-    background: 'rgba(255,255,255,0.15)',
+    background: '#fff',
     border: '2px solid var(--hca-gold)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontWeight: '900',
-    fontSize: '14px',
-    color: '#fff',
-    fontFamily: 'Arial Black, sans-serif',
-    letterSpacing: '1px',
+    overflow: 'hidden',
   },
   navTitle: {
     fontSize: '13px',

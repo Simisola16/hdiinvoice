@@ -46,8 +46,8 @@ const Login = () => {
       <div style={styles.card}>
         {/* Logo / Brand */}
         <div style={styles.brandSection}>
-          <div style={styles.logoPlaceholder}>
-            <span style={styles.logoText}>HCA</span>
+          <div style={styles.logoContainer}>
+            <img src="/hcaLogo.png" alt="HCA Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div>
             <h1 style={styles.brandTitle}>HALAL CERTIFICATION</h1>
@@ -174,23 +174,17 @@ const styles = {
     gap: '16px',
     marginBottom: '20px',
   },
-  logoPlaceholder: {
+  logoContainer: {
     width: '60px',
     height: '60px',
     minWidth: '60px',
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #1e4620, #4e7a3e)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
     border: '3px solid #d4a017',
-  },
-  logoText: {
-    color: '#fff',
-    fontWeight: '900',
-    fontSize: '18px',
-    fontFamily: 'Arial Black, sans-serif',
-    letterSpacing: '1px',
+    background: '#fff',
   },
   brandTitle: {
     fontSize: '13px',
