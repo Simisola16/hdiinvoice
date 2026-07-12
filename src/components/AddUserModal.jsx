@@ -3,7 +3,7 @@
  * Creates a new staff user with: Name, Email, Username, Password.
  */
 import { useState } from 'react';
-import { createUser } from '../api';
+import { createUser, getErrorMessage } from '../api';
 
 const AddUserModal = ({ onClose, onSuccess }) => {
   const [form, setForm] = useState({ name: '', email: '', username: '', password: '' });
@@ -30,8 +30,7 @@ const AddUserModal = ({ onClose, onSuccess }) => {
       const res = await createUser(form);
       onSuccess?.(res.data.user);
       onClose();
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create user.');
+      setError(getErrorMessage(err, 'Failed to create user.'));
     } finally {
       setLoading(false);
     }

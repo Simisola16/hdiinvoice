@@ -4,7 +4,7 @@
  * Fields: Company Name, Contact (address), Tel.
  */
 import { useState } from 'react';
-import { createCompany } from '../api';
+import { createCompany, getErrorMessage } from '../api';
 
 const AddCompanyModal = ({ onClose, onSuccess }) => {
   const [form, setForm] = useState({ name: '', contact: '', tel: '' });
@@ -26,8 +26,7 @@ const AddCompanyModal = ({ onClose, onSuccess }) => {
       const res = await createCompany(form);
       onSuccess(res.data.company);
       onClose();
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to add company.');
+      setError(getErrorMessage(err, 'Failed to add company.'));
     } finally {
       setLoading(false);
     }

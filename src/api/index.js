@@ -6,9 +6,26 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '/api' : 'https://hdiinvoiceapi.onrender.com/api'),
   withCredentials: true,   // send httpOnly cookie on every request
 });
+
+export const getErrorMessage = (err, fallback = 'An error occurred. Please try again.') => {
+  const data = err.response?.data;
+  if (!data) return err.message || fallback;
+  if (typeof data === 'string') {
+    if (data.trim().startsWith('<!DOCTYPE') || data.includes('<html')) {
+      return fallback;
+    }
+    return data;
+  }
+  if (data.error) {
+    if (typeof data.error === 'string') return data.error;
+    if (typeof data.error === 'object' && data.error.message) return data.error.message;
+  }
+  if (data.message) return data.message;
+  return fallback;
+};
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const login = (data) => api.post('/auth/login', data);

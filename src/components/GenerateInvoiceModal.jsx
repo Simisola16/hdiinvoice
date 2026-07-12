@@ -5,7 +5,7 @@
  * On submit: POST to backend → triggers PDF download.
  */
 import { useState, useEffect, useCallback } from 'react';
-import { getCompanies, createInvoice } from '../api';
+import { getCompanies, createInvoice, getErrorMessage } from '../api';
 
 // Format a number with commas and 2 decimal places
 const fmt = (n) => Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -199,12 +199,15 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
         try {
           const text = await err.response.data.text();
           const json = JSON.parse(text);
-          setError(json.error || 'Failed to generate invoice.');
+          const errorMsg = typeof json.error === 'string'
+            ? json.error
+            : (json.error?.message || 'Failed to generate invoice.');
+          setError(errorMsg);
         } catch {
           setError('Failed to generate invoice. Please try again.');
         }
       } else {
-        setError(err.response?.data?.error || 'Failed to generate invoice.');
+        setError(getErrorMessage(err, 'Failed to generate invoice.'));
       }
     } finally {
       setLoading(false);
