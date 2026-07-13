@@ -5,7 +5,7 @@
  * On submit: POST to backend → triggers PDF download.
  */
 import { useState, useEffect, useCallback } from 'react';
-import { getCompanies, createInvoice, getErrorMessage } from '../api';
+import { getCompanies, createInvoice, lookupCompany, getErrorMessage } from '../api';
 
 // Format a number with commas and 2 decimal places
 const fmt = (n) => Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -308,14 +308,32 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                         <div
                           key={c._id}
                           style={styles.dropdownItem}
-                          onClick={() => {
+                        onClick={async () => {
+                            // Immediately set what we know from the list
                             setCompanyId(c._id);
                             setSelectedCompany(c);
                             setCompanySearch(c.name);
-                            setAddress(c.contact || '');
-                            setTel(c.tel || '');
-                            setContactPerson(c.contactPerson || '');
                             setCompanies([]);
+
+                            // If the list already has contact details (locally stored), use them directly
+                            if (c.contact || c.tel || c.contactPerson) {
+                              setAddress(c.contact || '');
+                              setTel(c.tel || '');
+                              setContactPerson(c.contactPerson || '');
+                            } else {
+                              // External-only company — fetch stored details from local DB by name
+                              try {
+                                const res = await lookupCompany(c.name);
+                                setAddress(res.data.contact || '');
+                                setTel(res.data.tel || '');
+                                setContactPerson(res.data.contactPerson || '');
+                              } catch {
+                                // Lookup failed — leave fields empty so user can type
+                                setAddress('');
+                                setTel('');
+                                setContactPerson('');
+                              }
+                            }
                           }}
                         >
                           <strong>{c.name}</strong>

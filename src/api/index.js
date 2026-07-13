@@ -44,6 +44,11 @@ export const createUser = (data) => api.post('/users', data);
 export const getCompanies = (search = '') =>
   api.get('/companies', { params: search ? { search } : {} });
 export const createCompany = (data) => api.post('/companies', data);
+/** Fetch locally-stored contact details for a company by exact name.
+ *  Used to auto-fill Address/Tel/ContactPerson when a company is selected
+ *  from the external HDI portal list (which doesn't carry those fields). */
+export const lookupCompany = (name) =>
+  api.get('/companies/lookup', { params: { name } });
 
 // ─── Invoices ─────────────────────────────────────────────────────────────────
 export const getInvoices = (params = {}) => api.get('/invoices', { params });
