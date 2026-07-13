@@ -584,12 +584,10 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                     <span style={styles.pvClientValue}>{address || '—'}</span>
                   </div>
                   <div style={styles.pvClientRow}>
-                    <div style={{ display: 'flex', flex: 1, gap: '16px', alignItems: 'baseline' }}>
-                      <span style={styles.pvClientLabel}>Tel:</span>
-                      <span style={{ ...styles.pvClientValue, flex: 1.5 }}>{tel || '—'}</span>
-                      <span style={{ ...styles.pvClientLabel, minWidth: 'auto', marginLeft: 'auto' }}>Date:</span>
-                      <span style={{ ...styles.pvClientValue, flex: 1 }}>{formatDatePreview(date)}</span>
-                    </div>
+                    <span style={styles.pvClientLabel}>Tel:</span>
+                    <span style={{ ...styles.pvClientValue, flex: 1 }}>{tel || '—'}</span>
+                    <span style={{ ...styles.pvClientLabel, minWidth: 'auto', marginLeft: '32px' }}>Date:</span>
+                    <span style={{ ...styles.pvClientValue, flex: 1 }}>{formatDatePreview(date)}</span>
                   </div>
                 </div>
 
@@ -641,31 +639,36 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                 </div>
 
                 {/* Amount in words */}
-                <div style={{ marginTop: '12px', fontSize: '11px' }}>
+                <div style={{ marginTop: '12px', fontSize: '11px', marginBottom: '8px' }}>
                   <span>Total Amount in Words: </span>
                   <strong style={{ textDecoration: 'underline' }}>{numberToWords(calc.grandTotal).toUpperCase()}</strong>
                 </div>
 
-                <hr style={styles.pvDivider} />
+                {/* Pinned Bottom Footer */}
+                <div style={styles.pvFooter}>
+                  <hr style={styles.pvDivider} />
 
-                {/* Terms Box */}
-                <div style={styles.pvTermsBox}>
-                  <div style={styles.pvTermsLabel}>TERMS:</div>
-                  <div style={styles.pvTermsText}>
-                    The decision of HCA in all matters of halal certification shall be final.<br />
-                    Payment of appropriate fees as stated above is a sign of commitment of applicant, and all processes shall be
-                    carried out with trust and integrity before the issuance of the certificate and label order.
+                  {/* Terms Box */}
+                  <div style={styles.pvTermsBox}>
+                    <div style={styles.pvTermsLabel}>TERMS:</div>
+                    <div style={styles.pvTermsText}>
+                      The decision of HCA in all matters of halal certification shall be final.<br />
+                      Payment of appropriate fees as stated above is a sign of commitment of applicant, and all processes shall be
+                      carried out with trust and integrity before the issuance of the certificate and label order.
+                    </div>
                   </div>
-                </div>
 
-                {/* Signature Line */}
-                <div style={styles.pvSigSection}>
-                  <div style={{ minHeight: '36px' }}></div>
-                  <div style={styles.pvSigLine}>Account Manager's Signature</div>
-                </div>
+                  {/* Signature Line */}
+                  <div style={styles.pvSigSection}>
+                    <div style={styles.pvSigImageArea}>
+                      <img src="/signature.png" alt="Signature" style={{ maxHeight: '36px' }} />
+                    </div>
+                    <div style={styles.pvSigLine}>Account Manager's Signature</div>
+                  </div>
 
-                {/* Bottom Banner */}
-                <div style={styles.pvBottomBanner}>Thank You For Your Patronage</div>
+                  {/* Bottom Banner */}
+                  <div style={styles.pvBottomBanner}>Thank You For Your Patronage</div>
+                </div>
               </div>
             )}
           </div>
@@ -788,6 +791,9 @@ const styles = {
     boxShadow: 'inset 0 0 10px rgba(0,0,0,0.03), 0 2px 16px rgba(0,0,0,0.05)',
     fontFamily: 'Arial, sans-serif',
     color: '#000',
+    position: 'relative',
+    minHeight: '620px',
+    paddingBottom: '210px',
   },
   pvHeader: {
     display: 'flex',
@@ -955,7 +961,6 @@ const styles = {
     display: 'flex',
     alignItems: 'flex-start',
     gap: '12px',
-    marginTop: '6px',
   },
   pvTermsLabel: {
     fontSize: '14px',
@@ -970,9 +975,24 @@ const styles = {
     lineHeight: '1.5',
     flex: 1,
   },
+  pvFooter: {
+    position: 'absolute',
+    bottom: '24px',
+    left: '20px',
+    right: '20px',
+  },
   pvSigSection: {
     textAlign: 'right',
-    marginTop: '8px',
+    marginTop: '6px',
+  },
+  pvSigImageArea: {
+    minHeight: '36px',
+    marginBottom: '2px',
+    width: '160px',
+    marginLeft: 'auto',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   pvSigLine: {
     borderTop: '1.5px solid #000',
@@ -990,7 +1010,7 @@ const styles = {
     fontSize: '14px',
     fontStyle: 'italic',
     fontWeight: 'bold',
-    marginTop: '12px',
+    marginTop: '10px',
     borderRadius: '4px',
   },
   cancelBtn: {
