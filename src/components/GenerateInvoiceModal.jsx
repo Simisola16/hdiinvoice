@@ -66,6 +66,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
   const [address, setAddress] = useState('');
   const [tel, setTel] = useState('');
   const [contactPerson, setContactPerson] = useState('');
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [vatPercent, setVatPercent] = useState('7.5');
   const [date, setDate] = useState(toInputDate(new Date()));
   const [items, setItems] = useState([{ description: 'HALAL CERTIFICATION', rate: '', qty: '1' }]);
@@ -320,6 +321,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                               setAddress(c.contact || '');
                               setTel(c.tel || '');
                               setContactPerson(c.contactPerson || '');
+                              setIsEditingAddress(false);
                             } else {
                               // External-only company — fetch stored details from local DB by name
                               try {
@@ -327,11 +329,13 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                                 setAddress(res.data.contact || '');
                                 setTel(res.data.tel || '');
                                 setContactPerson(res.data.contactPerson || '');
+                                setIsEditingAddress(false);
                               } catch {
                                 // Lookup failed — leave fields empty so user can type
                                 setAddress('');
                                 setTel('');
                                 setContactPerson('');
+                                setIsEditingAddress(true);
                               }
                             }
                           }}
@@ -355,6 +359,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                           setAddress('');
                           setTel('');
                           setContactPerson('');
+                          setIsEditingAddress(false);
                           loadCompanies();
                         }}
                       >
@@ -365,7 +370,21 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                 </div>
 
                 {/* Company Address and Phone details */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'var(--gray-50)', padding: '16px', borderRadius: '8px', border: '1px solid var(--gray-200)', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--gray-700)' }}>Client Contact Details</span>
+                  {companySearch && (
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${isEditingAddress ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ padding: '4px 10px', fontSize: '11px', backgroundColor: isEditingAddress ? '#f1c40f' : 'var(--gray-200)', color: isEditingAddress ? '#1e4620' : 'var(--gray-800)', border: 'none', fontWeight: 'bold', borderRadius: '4px', cursor: 'pointer' }}
+                      onClick={() => setIsEditingAddress(!isEditingAddress)}
+                    >
+                      {isEditingAddress ? '✓ Done Editing' : '✏️ Edit Client Address/Info'}
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'var(--gray-50)', padding: '16px', borderRadius: '8px', border: '1px solid var(--gray-200)', marginBottom: '16px', opacity: isEditingAddress ? 1 : 0.85 }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label" htmlFor="addressInput">
                       Address <span className="required">*</span>
@@ -377,7 +396,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                       placeholder="e.g. PC 32 Church Gate Street, Lagos Island"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      disabled={loading}
+                      disabled={loading || !isEditingAddress}
                     />
                   </div>
                   <div className="form-group" style={{ marginBottom: 0 }}>
@@ -391,7 +410,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                       placeholder="e.g. 08012345678"
                       value={tel}
                       onChange={(e) => setTel(e.target.value)}
-                      disabled={loading}
+                      disabled={loading || !isEditingAddress}
                     />
                   </div>
                   <div className="form-group" style={{ marginBottom: 0, gridColumn: 'span 2', marginTop: '12px' }}>
@@ -405,7 +424,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                       placeholder="e.g. Mr. Abdullahi Yusuf"
                       value={contactPerson}
                       onChange={(e) => setContactPerson(e.target.value)}
-                      disabled={loading}
+                      disabled={loading || !isEditingAddress}
                     />
                   </div>
                 </div>
