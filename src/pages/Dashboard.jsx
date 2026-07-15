@@ -67,7 +67,7 @@ const Dashboard = () => {
         <div style={styles.navRight}>
           <div style={styles.navUser}>
             <div style={styles.navAvatar}>{user?.name?.[0]?.toUpperCase() || 'U'}</div>
-            <div>
+            <div className="nav-user-text">
               <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>{user?.name}</div>
               <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>
                 {user?.role === 'superadmin' ? '★ Superadmin' : 'Staff'}
@@ -92,11 +92,11 @@ const Dashboard = () => {
           {/* Action buttons */}
           <div style={styles.actionRow}>
             {user?.role === 'superadmin' && (
-              <button className="btn btn-secondary" onClick={() => setModal('addUser')}>
+              <button className="btn btn-secondary btn-action" onClick={() => setModal('addUser')}>
                 👤 Add User
               </button>
             )}
-            <button className="btn btn-gold" onClick={() => setModal('generateInvoice')}>
+            <button className="btn btn-gold btn-action" onClick={() => setModal('generateInvoice')}>
               📄 Create Invoice
             </button>
           </div>
@@ -168,7 +168,7 @@ const styles = {
   },
   navbar: {
     background: 'linear-gradient(90deg, var(--hca-green) 0%, #2d6a31 100%)',
-    padding: '0 24px',
+    padding: '0 20px',
     height: '64px',
     display: 'flex',
     alignItems: 'center',
@@ -177,15 +177,20 @@ const styles = {
     position: 'sticky',
     top: 0,
     zIndex: 100,
+    gap: '8px',
   },
   navBrand: {
     display: 'flex',
     alignItems: 'center',
-    gap: '14px',
+    gap: '10px',
+    minWidth: 0,
+    flex: 1,
+    overflow: 'hidden',
   },
   navLogo: {
-    width: '40px',
-    height: '40px',
+    width: '38px',
+    height: '38px',
+    minWidth: '38px',
     borderRadius: '50%',
     background: '#fff',
     border: '2px solid var(--hca-gold)',
@@ -195,58 +200,66 @@ const styles = {
     overflow: 'hidden',
   },
   navTitle: {
-    fontSize: '13px',
+    fontSize: '12px',
     fontWeight: '800',
     color: '#fff',
-    letterSpacing: '0.5px',
+    letterSpacing: '0.4px',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
   navSub: {
     fontSize: '10px',
     color: 'rgba(255,255,255,0.65)',
     letterSpacing: '0.3px',
+    whiteSpace: 'nowrap',
   },
   navRight: {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
+    gap: '10px',
+    flexShrink: 0,
   },
   navUser: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: '8px',
   },
   navAvatar: {
-    width: '36px',
-    height: '36px',
+    width: '34px',
+    height: '34px',
+    minWidth: '34px',
     borderRadius: '50%',
     background: 'var(--hca-gold)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: '700',
-    fontSize: '15px',
+    fontSize: '14px',
     color: '#fff',
   },
   logoutBtn: {
     borderColor: 'rgba(255,255,255,0.4)',
     color: '#fff',
     background: 'rgba(255,255,255,0.1)',
+    padding: '6px 12px',
+    fontSize: '13px',
   },
   content: {
     maxWidth: '1400px',
     margin: '0 auto',
-    padding: '24px 20px 40px',
+    padding: '20px 16px 40px',
   },
   pageHeader: {
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
-    gap: '16px',
-    marginBottom: '24px',
+    gap: '12px',
+    marginBottom: '20px',
   },
   pageTitle: {
-    fontSize: '24px',
+    fontSize: '22px',
     fontWeight: '800',
     color: 'var(--hca-green)',
     lineHeight: '1.2',
@@ -258,18 +271,21 @@ const styles = {
   },
   actionRow: {
     display: 'flex',
-    gap: '10px',
+    gap: '8px',
     flexWrap: 'wrap',
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '16px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+    gap: '12px',
   },
   toast: {
     position: 'fixed',
-    bottom: '24px',
-    right: '24px',
+    bottom: '20px',
+    right: '20px',
+    left: '20px',
+    maxWidth: '380px',
+    margin: '0 auto',
     background: 'var(--hca-green)',
     color: '#fff',
     padding: '12px 20px',
@@ -279,7 +295,9 @@ const styles = {
     boxShadow: '0 8px 24px rgba(30,70,32,0.35)',
     zIndex: 2000,
     animation: 'slideUp 0.3s ease',
+    textAlign: 'center',
   },
 };
 
 export default Dashboard;
+

@@ -43,7 +43,7 @@ const Login = () => {
       <div style={styles.bgCircle1} />
       <div style={styles.bgCircle2} />
 
-      <div style={styles.card}>
+      <div style={styles.card} className="login-card">
         {/* Logo / Brand */}
         <div style={styles.brandSection}>
           <div style={styles.logoContainer}>

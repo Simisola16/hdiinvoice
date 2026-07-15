@@ -73,8 +73,8 @@ const InvoiceTable = ({ refreshKey }) => {
     <div>
       {/* ── Filter Panel ───────────────────────────────────────────────────── */}
       <div style={styles.filterPanel}>
-        <div style={styles.filterRow}>
-          <div className="form-group" style={{ marginBottom: 0, flex: 2 }}>
+        <div className="filter-row">
+          <div className="form-group filter-item filter-item-wide" style={{ marginBottom: 0 }}>
             <label className="form-label">Company Name</label>
             <input
               name="companyName"
@@ -85,7 +85,7 @@ const InvoiceTable = ({ refreshKey }) => {
               onChange={handleFilterChange}
             />
           </div>
-          <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
+          <div className="form-group filter-item" style={{ marginBottom: 0 }}>
             <label className="form-label">From Date</label>
             <input
               name="dateFrom"
@@ -95,7 +95,7 @@ const InvoiceTable = ({ refreshKey }) => {
               onChange={handleFilterChange}
             />
           </div>
-          <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
+          <div className="form-group filter-item" style={{ marginBottom: 0 }}>
             <label className="form-label">To Date</label>
             <input
               name="dateTo"
@@ -105,7 +105,7 @@ const InvoiceTable = ({ refreshKey }) => {
               onChange={handleFilterChange}
             />
           </div>
-          <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
+          <div className="form-group filter-item" style={{ marginBottom: 0 }}>
             <label className="form-label">Amount (₦)</label>
             <input
               name="amount"
@@ -211,15 +211,9 @@ const styles = {
     background: 'var(--white)',
     border: '1px solid var(--gray-200)',
     borderRadius: 'var(--radius-md)',
-    padding: '16px 20px',
+    padding: '14px 16px',
     marginBottom: '16px',
     boxShadow: 'var(--shadow-sm)',
-  },
-  filterRow: {
-    display: 'flex',
-    gap: '12px',
-    flexWrap: 'wrap',
-    alignItems: 'flex-end',
   },
   resultMeta: {
     marginBottom: '8px',

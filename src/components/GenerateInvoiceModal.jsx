@@ -227,7 +227,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal modal-lg" style={{ maxWidth: '850px' }}>
+      <div className="modal modal-invoice">
         <div className="modal-header">
           <div className="modal-title">
             <span>📄</span> Create Invoice
@@ -275,7 +275,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="modal-body" style={{ maxHeight: 'calc(100vh - 250px)', overflowY: 'auto', padding: activeTab === 'preview' ? '12px' : '20px' }}>
+          <div className="modal-body invoice-modal-body">
             {error && <div className="alert alert-error" style={{ marginBottom: '16px' }}><span>⚠️</span> {error}</div>}
 
             {/* TAB 1: EDIT FORM */}
@@ -446,8 +446,8 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                   </div>
 
                   {items.map((item, index) => (
-                    <div key={index} style={styles.itemRow}>
-                      <div style={{ flex: 3 }}>
+                    <div key={index} className="item-row">
+                      <div className="item-desc-field">
                         <label className="form-label" style={{ fontSize: '11px' }}>
                           Service Description #{index + 1} <span className="required">*</span>
                         </label>
@@ -460,7 +460,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                           disabled={loading}
                         />
                       </div>
-                      <div style={{ flex: 1.5, minWidth: '100px' }}>
+                      <div className="item-rate-field">
                         <label className="form-label" style={{ fontSize: '11px' }}>
                           Rate (₦) <span className="required">*</span>
                         </label>
@@ -475,7 +475,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                           disabled={loading}
                         />
                       </div>
-                      <div style={{ flex: 1, minWidth: '70px' }}>
+                      <div className="item-qty-field">
                         <label className="form-label" style={{ fontSize: '11px' }}>
                           Qty <span className="required">*</span>
                         </label>
@@ -578,28 +578,36 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
             {/* TAB 2: INTERACTIVE DOCUMENT PREVIEW */}
             {activeTab === 'preview' && (
               <div style={styles.sheetPaper}>
+                {/* Watermark */}
+                <div style={styles.pvWatermark}>
+                  <img src="/hcaLogo.png" alt="HDI Watermark" style={styles.pvWatermarkImg} />
+                </div>
+
                 {/* ── Header ── */}
                 <div style={styles.pvHeader}>
                   <div style={styles.pvLogoBlock}>
-                     <img src="/hcaLogo.png" alt="HCA Crest" style={styles.pvLogoImg} />
+                     <img src="/hcaLogo.png" alt="HDI Crest" style={styles.pvLogoImg} />
                   </div>
                   <div style={styles.pvHeaderText}>
-                    <div style={styles.pvHeaderArabic}>هيئة ترخيص منتجات الحلال</div>
-                    <div style={styles.pvHeaderTitle}>HALAL CERTIFICATION AUTHORITY (HCA)</div>
-                    <div style={styles.pvHeaderSub}>A Subsidiary of</div>
-                    <div style={styles.pvHeaderParent}>Halal &amp; Haram Distinction Development Initiative (HDI)</div>
+                    <div style={styles.pvHeaderArabic}>مبادرة ترسيخ التمييز بين الحلال والحرام</div>
+                    <div style={styles.pvHeaderTitle}>HALAL AND HARAM DISTINCTION DEVELOPMENT INITIATIVE (HDi)</div>
+                    <div style={styles.pvHeaderSub}>(Formerly HALAL CERTIFICATION AUTHORITY (HCA))</div>
                     <div style={styles.pvHeaderAddress}>
-                      <strong>Corporate Secretariat:</strong> 9a, Wing 1, Abiodun Fasakin St., Anthony Village, Idi-Iroko Bus-Stop, Lagos.<br />
-                      <strong>Branch Office:</strong> 67, Ladipo Street, Opposite Ladipo Police Post, Mushin, Lagos State.
+                      <span style={{ color: '#c00000', fontWeight: 'bold' }}>Corporate Secretariat:</span>{' '}
+                      <span style={{ color: '#000' }}>9a, Wing 1, Abiodun Fasakin St., Anthony Village, Idi-Iroko Bus-Stop, Lagos.</span>
+                      <br />
+                      <span style={{ color: '#c00000', fontWeight: 'bold' }}>Branch Office:</span>{' '}
+                      <span style={{ color: '#000' }}>7, Bozoom St., Suites B40, Fanaha Business Complex Suites (Yauza Suya Spot), Behind AP Plaza, Ademola Adetokunbo Crescent, Wuse 2, FCT, Abuja, Nigeria.</span>
                     </div>
-                    <div style={styles.pvHeaderContact}>
-                      <strong>Tel:</strong> 08023519433, 08023470542, 08037218855 &nbsp;|&nbsp; <strong>Website:</strong> www.halalcert.com.ng &nbsp;|&nbsp; <strong>E-mail:</strong> info@halalcert.com.ng
+                    <div style={styles.pvHeaderBanner}>
+                      <div>Tel: 08023519433, 08023470542, 08037218855</div>
+                      <div>Website: www.halalcert.com.ng &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; E-mail: info@halalcert.com.ng</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Accent Strip */}
-                <div style={styles.pvStrip}></div>
+                {/* Spacer to separate header from content */}
+                <div style={{ height: '12px' }}></div>
 
                 {/* Title + Number Row */}
                 <div style={styles.pvTitleRow}>
@@ -617,7 +625,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                     <span style={styles.pvClientValue}>{companySearch || '—'}</span>
                   </div>
                   <div style={styles.pvClientRow}>
-                    <span style={styles.pvClientLabel}>Address:</span>
+                    <span style={styles.pvClientLabel}>Contact:</span>
                     <span style={styles.pvClientValue}>{address || '—'}</span>
                   </div>
                   <div style={styles.pvClientRow}>
@@ -632,7 +640,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                 <div style={{ marginTop: '14px' }}>
                   <table style={styles.pvTable}>
                     <thead>
-                      <tr style={{ backgroundColor: '#c8d8b0' }}>
+                      <tr style={{ backgroundColor: '#c7e0b5' }}>
                         <th style={styles.pvTh}>S/N</th>
                         <th style={{ ...styles.pvTh, textAlign: 'left', paddingLeft: '8px' }}>SERVICE DESCRIPTION</th>
                         <th style={styles.pvTh}>RATE</th>
@@ -664,9 +672,22 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                       {/* Grand Total Footer */}
                       <tr>
                         <td colSpan="3" style={styles.pvBankCell}>
-                          <strong>Banker:</strong>&nbsp; Jaiz Bank Plc &nbsp; Tin No: 20285799-0001<br />
-                          <strong>Account Name:</strong>&nbsp; HALAL AND HARAM DISTINCTION DEVELOPEMENT INITIATIVE<br />
-                          <strong>Account No:</strong>&nbsp; 0007158427 &nbsp; Sort Code: 301150303
+                          <span style={styles.pvBankUnderline}>
+                            <span style={styles.pvBankLabel}>Banker:</span> <span style={styles.pvBankValue}>Jaiz Bank Plc</span>
+                          </span>
+                          <br />
+                          <span style={styles.pvBankUnderline}>
+                            <span style={styles.pvBankLabel}>Account Name:</span>{' '}
+                            <span style={styles.pvBankValue}>HALAL AND HARAM DISTINCTION DEVELOPEMENT INITIATIVE</span>
+                          </span>
+                          <br />
+                          <span style={styles.pvBankUnderline}>
+                            <span style={styles.pvBankLabel}>Account no:</span> <span style={styles.pvBankValue}>0007158427</span>
+                          </span>
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                          <span style={styles.pvBankUnderline}>
+                            <span style={styles.pvBankLabel}>Sort Code:</span> <span style={styles.pvBankValue}>301150303</span>
+                          </span>
                         </td>
                         <td style={styles.pvGrandLabelCell}>GRAND TOTAL</td>
                         <td style={styles.pvGrandAmountCell}>N{fmt(calc.grandTotal)}</td>
@@ -713,7 +734,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
           <div className="modal-footer">
             <button
               type="button"
-              className="btn"
+              className="btn btn-action"
               onClick={onClose}
               disabled={loading}
               style={styles.cancelBtn}
@@ -722,7 +743,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
             </button>
             <button
               type="submit"
-              className="btn"
+              className="btn btn-action"
               disabled={loading}
               style={styles.generateBtn}
             >
@@ -742,10 +763,13 @@ const styles = {
     display: 'flex',
     borderBottom: '2px solid var(--gray-200)',
     background: 'var(--gray-50)',
-    padding: '0 20px',
+    padding: '0 16px',
+    overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
+    flexShrink: 0,
   },
   tab: {
-    padding: '12px 24px',
+    padding: '11px 18px',
     border: 'none',
     background: 'none',
     cursor: 'pointer',
@@ -831,11 +855,12 @@ const styles = {
     position: 'relative',
     minHeight: '620px',
     paddingBottom: '210px',
+    overflow: 'hidden',
   },
   pvHeader: {
     display: 'flex',
     gap: '12px',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   pvLogoBlock: {
     width: '90px',
@@ -854,41 +879,63 @@ const styles = {
     textAlign: 'center',
   },
   pvHeaderArabic: {
-    fontSize: '17px',
-    color: '#c00000',
+    fontSize: '15px',
+    color: '#1b3a82',
     fontWeight: 'bold',
-    textAlign: 'right',
-    fontFamily: 'Georgia, serif',
+    textAlign: 'center',
+    fontFamily: 'Arial, sans-serif',
   },
   pvHeaderTitle: {
-    fontSize: '19px',
+    fontSize: '16px',
     fontWeight: 'bold',
-    color: '#1e4620',
-    lineHeight: '1.1',
+    color: '#1b3a82',
+    lineHeight: '1.2',
     letterSpacing: '-0.3px',
-    fontFamily: 'Arial Black, sans-serif',
+    fontFamily: 'Arial, sans-serif',
+    textAlign: 'center',
   },
   pvHeaderSub: {
-    fontSize: '8.5px',
-    fontStyle: 'italic',
-    marginTop: '2px',
-  },
-  pvHeaderParent: {
-    fontSize: '9.5px',
+    fontSize: '9px',
     fontWeight: 'bold',
-    color: '#000',
+    color: '#1b3a82',
+    textAlign: 'center',
+    marginTop: '2px',
+    marginBottom: '3px',
   },
   pvHeaderAddress: {
     fontSize: '8px',
-    color: '#c00000',
-    lineHeight: '1.4',
-    marginTop: '3px',
-  },
-  pvHeaderContact: {
-    fontSize: '8px',
     color: '#000',
     lineHeight: '1.4',
     marginTop: '2px',
+    textAlign: 'center',
+  },
+  pvHeaderBanner: {
+    backgroundColor: '#1e4620',
+    color: '#fff',
+    textAlign: 'center',
+    padding: '4px 10px',
+    marginTop: '6px',
+    fontSize: '8px',
+    lineHeight: '1.4',
+  },
+  pvWatermark: {
+    position: 'absolute',
+    top: '45%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '320px',
+    height: '320px',
+    opacity: 0.05,
+    zIndex: 0,
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pvWatermarkImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain',
   },
   pvStrip: {
     height: '6px',
@@ -905,8 +952,7 @@ const styles = {
     fontSize: '24px',
     fontWeight: 'bold',
     color: '#c00000',
-    fontFamily: 'Arial Black, sans-serif',
-    fontStyle: 'italic',
+    fontFamily: 'Arial, sans-serif',
   },
   pvInvNoBlock: {
     fontSize: '11.5px',
@@ -970,7 +1016,7 @@ const styles = {
     verticalAlign: 'top',
   },
   pvGrandLabelCell: {
-    background: '#c8d8b0',
+    background: '#c7e0b5',
     border: '1.5px solid #000',
     textAlign: 'center',
     fontSize: '11.5px',
@@ -978,13 +1024,26 @@ const styles = {
     verticalAlign: 'middle',
   },
   pvGrandAmountCell: {
-    background: '#c8d8b0',
+    background: '#c7e0b5',
     border: '1.5px solid #000',
     textAlign: 'right',
     fontSize: '11.5px',
     fontWeight: 'bold',
     paddingRight: '8px',
     verticalAlign: 'middle',
+  },
+  pvBankUnderline: {
+    textDecoration: 'underline',
+    textDecorationColor: '#2e7d32',
+    display: 'inline-block',
+    marginBottom: '2px',
+  },
+  pvBankLabel: {
+    color: '#2e7d32',
+    fontWeight: 'bold',
+  },
+  pvBankValue: {
+    color: '#000',
   },
   pvDivider: {
     border: 'none',
@@ -993,7 +1052,7 @@ const styles = {
   },
   pvTermsBox: {
     border: '1.5px solid #4e7a3e',
-    backgroundColor: '#c8d8b0',
+    backgroundColor: '#c7e0b5',
     padding: '8px 12px',
     display: 'flex',
     alignItems: 'flex-start',
