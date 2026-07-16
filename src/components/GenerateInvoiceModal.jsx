@@ -68,9 +68,10 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
   const [contactPerson, setContactPerson] = useState('');
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [vatPercent, setVatPercent] = useState('7.5');
+  const [discountPercent, setDiscountPercent] = useState('0');
   const [date, setDate] = useState(toInputDate(new Date()));
   const [items, setItems] = useState([{ description: 'HALAL CERTIFICATION', rate: '', qty: '1' }]);
-  const [calc, setCalc] = useState({ subTotal: 0, vatAmount: 0, grandTotal: 0 });
+  const [calc, setCalc] = useState({ subTotal: 0, discountAmount: 0, vatAmount: 0, grandTotal: 0 });
   const [loading, setLoading] = useState(false);
   const [fetchingCompanies, setFetchingCompanies] = useState(false);
   const [error, setError] = useState('');
@@ -98,11 +99,14 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
       const q = parseFloat(item.qty) || 0;
       subTotal += r * q;
     });
+    const discPct = parseFloat(discountPercent) || 0;
+    const discountAmount = parseFloat((subTotal * (discPct / 100)).toFixed(2));
+    const vatBase = parseFloat((subTotal - discountAmount).toFixed(2));
     const vatPct = parseFloat(vatPercent) || 0;
-    const vatAmount = parseFloat((subTotal * (vatPct / 100)).toFixed(2));
-    const grandTotal = parseFloat((subTotal + vatAmount).toFixed(2));
-    setCalc({ subTotal, vatAmount, grandTotal });
-  }, [items, vatPercent]);
+    const vatAmount = parseFloat((vatBase * (vatPct / 100)).toFixed(2));
+    const grandTotal = parseFloat((vatBase + vatAmount).toFixed(2));
+    setCalc({ subTotal, discountAmount, vatAmount, grandTotal });
+  }, [items, vatPercent, discountPercent]);
 
   // ── Multiple Items Handlers ────────────────────────────────────────────────
   const handleItemChange = (index, field, value) => {
@@ -187,6 +191,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
           qty: parseFloat(item.qty)
         })),
         vatPercent: parseFloat(vatPercent),
+        discountPercent: parseFloat(discountPercent) || 0,
         date,
       });
 
@@ -506,6 +511,24 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
 
                 <div className="form-row">
                   <div className="form-group">
+                    <label className="form-label" htmlFor="discountPercent">
+                      Discount %
+                    </label>
+                    <input
+                      id="discountPercent"
+                      name="discountPercent"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      className="form-input"
+                      placeholder="0"
+                      value={discountPercent}
+                      onChange={(e) => setDiscountPercent(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="form-group">
                     <label className="form-label" htmlFor="vatPercent">
                       VAT %
                     </label>
@@ -562,6 +585,12 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                       <span>Sub Total</span>
                       <span><strong>₦{fmt(calc.subTotal)}</strong></span>
                     </div>
+                    {(parseFloat(discountPercent) || 0) > 0 && (
+                      <div className="calc-row" style={{ color: '#c00000' }}>
+                        <span>Discount ({discountPercent}%)</span>
+                        <span>- ₦{fmt(calc.discountAmount)}</span>
+                      </div>
+                    )}
                     <div className="calc-row">
                       <span>VAT ({vatPercent || 0}%)</span>
                       <span>₦{fmt(calc.vatAmount)}</span>
@@ -660,9 +689,19 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                           </td>
                         </tr>
                       ))}
+                      {/* Discount row — only shown if discount > 0 */}
+                      {(parseFloat(discountPercent) || 0) > 0 && (
+                        <tr style={{ height: '24px', background: '#fff8f8' }}>
+                          <td style={styles.pvTd}>{items.length + 1}.</td>
+                          <td style={{ ...styles.pvTd, textAlign: 'left', paddingLeft: '8px', color: '#c00000', fontStyle: 'italic', fontWeight: 'bold' }}>DISCOUNT ({discountPercent}%)</td>
+                          <td style={styles.pvTd}></td>
+                          <td style={styles.pvTd}></td>
+                          <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px', color: '#c00000', fontWeight: 'bold' }}>- {fmt(calc.discountAmount)}</td>
+                        </tr>
+                      )}
                       {/* VAT row */}
                       <tr style={{ height: '24px' }}>
-                        <td style={styles.pvTd}>{items.length + 1}.</td>
+                        <td style={styles.pvTd}>{items.length + ((parseFloat(discountPercent) || 0) > 0 ? 2 : 1)}.</td>
                         <td style={{ ...styles.pvTd, textAlign: 'left', paddingLeft: '8px' }}>VAT OF {vatPercent || 0}%</td>
                         <td style={styles.pvTd}></td>
                         <td style={styles.pvTd}></td>

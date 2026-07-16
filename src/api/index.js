@@ -66,4 +66,11 @@ export const createInvoice = (data) =>
 export const getInvoicePdf = (id) =>
   api.get(`/invoices/${id}/pdf`, { responseType: 'blob' });
 
+/**
+ * Toggles the paid status of an invoice.
+ */
+export const markInvoicePaid = (id) =>
+  api.patch(`/invoices/${id}/paid`);
+
+
 export default api;

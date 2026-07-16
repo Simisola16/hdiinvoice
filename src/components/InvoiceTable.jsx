@@ -1,10 +1,10 @@
 /**
  * InvoiceTable
- * Displays invoice list with search/filter controls.
- * Columns: Invoice No | Company | Date | Grand Total | Created By | Actions
+ * Displays invoice list with search/filter controls and paid/unpaid status.
+ * Columns: Invoice No | Company | Date | Service | Grand Total | Created By | Status | Actions
  */
 import { useState, useEffect, useCallback } from 'react';
-import { getInvoices, getInvoicePdf } from '../api';
+import { getInvoices, getInvoicePdf, markInvoicePaid } from '../api';
 
 const fmt = (n) =>
   Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -15,10 +15,12 @@ const formatDate = (d) => {
 };
 
 const InvoiceTable = ({ refreshKey }) => {
-  const [invoices, setInvoices]     = useState([]);
-  const [loading, setLoading]       = useState(false);
+  const [invoices, setInvoices]       = useState([]);
+  const [loading, setLoading]         = useState(false);
   const [downloading, setDownloading] = useState(null); // invoice id being downloaded
-  const [filters, setFilters]       = useState({
+  const [markingPaid, setMarkingPaid] = useState(null); // invoice id being toggled
+  const [statusTab, setStatusTab]     = useState('all'); // 'all' | 'paid' | 'unpaid'
+  const [filters, setFilters]         = useState({
     dateFrom: '', dateTo: '', amount: '', companyName: '',
   });
 
@@ -30,6 +32,8 @@ const InvoiceTable = ({ refreshKey }) => {
       if (filters.dateTo)      params.dateTo      = filters.dateTo;
       if (filters.amount)      params.amount      = filters.amount;
       if (filters.companyName) params.companyName = filters.companyName;
+      if (statusTab === 'paid')   params.paid = 'true';
+      if (statusTab === 'unpaid') params.paid = 'false';
       const res = await getInvoices(params);
       setInvoices(res.data);
     } catch (err) {
@@ -37,7 +41,7 @@ const InvoiceTable = ({ refreshKey }) => {
     } finally {
       setLoading(false);
     }
-  }, [filters, refreshKey]);
+  }, [filters, refreshKey, statusTab]);
 
   useEffect(() => { fetchInvoices(); }, [fetchInvoices]);
 
@@ -67,10 +71,51 @@ const InvoiceTable = ({ refreshKey }) => {
     }
   };
 
+  const handleTogglePaid = async (invoice) => {
+    const action = invoice.paid ? 'Mark as Unpaid' : 'Mark as Paid';
+    if (!window.confirm(`${action} invoice ${invoice.invoiceNumber}?`)) return;
+    setMarkingPaid(invoice._id);
+    try {
+      const res = await markInvoicePaid(invoice._id);
+      // Update local state immediately for snappy UX
+      setInvoices((prev) =>
+        prev.map((inv) =>
+          inv._id === invoice._id
+            ? { ...inv, paid: res.data.paid, paidAt: res.data.paidAt }
+            : inv
+        )
+      );
+    } catch (err) {
+      alert('Failed to update payment status. Please try again.');
+    } finally {
+      setMarkingPaid(null);
+    }
+  };
+
   const hasActiveFilters = Object.values(filters).some(Boolean);
 
   return (
     <div>
+      {/* ── Status Tabs ──────────────────────────────────────────────────────── */}
+      <div style={styles.tabRow}>
+        {['all', 'paid', 'unpaid'].map((tab) => (
+          <button
+            key={tab}
+            style={{
+              ...styles.tabBtn,
+              ...(statusTab === tab ? styles.tabBtnActive : {}),
+              ...(tab === 'paid' && statusTab === tab ? styles.tabBtnPaid : {}),
+              ...(tab === 'unpaid' && statusTab === tab ? styles.tabBtnUnpaid : {}),
+            }}
+            onClick={() => setStatusTab(tab)}
+          >
+            {tab === 'all'    && '📋 All Invoices'}
+            {tab === 'paid'   && '✅ Paid'}
+            {tab === 'unpaid' && '⏳ Unpaid'}
+          </button>
+        ))}
+      </div>
+
       {/* ── Filter Panel ───────────────────────────────────────────────────── */}
       <div style={styles.filterPanel}>
         <div className="filter-row">
@@ -157,12 +202,13 @@ const InvoiceTable = ({ refreshKey }) => {
                 <th>Service</th>
                 <th style={{ textAlign: 'right' }}>Grand Total</th>
                 <th>Created By</th>
-                <th style={{ textAlign: 'center' }}>PDF</th>
+                <th style={{ textAlign: 'center' }}>Status</th>
+                <th style={{ textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {invoices.map((inv) => (
-                <tr key={inv._id}>
+                <tr key={inv._id} style={inv.paid ? styles.paidRow : {}}>
                   <td>
                     <span style={styles.invoiceNo}>{inv.invoiceNumber}</span>
                   </td>
@@ -184,17 +230,42 @@ const InvoiceTable = ({ refreshKey }) => {
                   <td>
                     <span className="badge badge-green">{inv.createdBy}</span>
                   </td>
+                  {/* ── Status column ── */}
                   <td style={{ textAlign: 'center' }}>
-                    <button
-                      className="btn btn-sm btn-primary"
-                      onClick={() => handleDownload(inv)}
-                      disabled={downloading === inv._id}
-                      title="Download PDF"
-                    >
-                      {downloading === inv._id
-                        ? <div className="spinner spinner-sm" />
-                        : '⬇ PDF'}
-                    </button>
+                    {inv.paid ? (
+                      <span style={styles.badgePaid}>✓ PAID</span>
+                    ) : (
+                      <span style={styles.badgeUnpaid}>⏳ UNPAID</span>
+                    )}
+                  </td>
+                  {/* ── Actions column ── */}
+                  <td style={{ textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'nowrap' }}>
+                      {/* PDF download */}
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={() => handleDownload(inv)}
+                        disabled={downloading === inv._id}
+                        title="Download PDF"
+                        style={{ whiteSpace: 'nowrap' }}
+                      >
+                        {downloading === inv._id
+                          ? <div className="spinner spinner-sm" />
+                          : '⬇ PDF'}
+                      </button>
+                      {/* Mark Paid / Unpaid */}
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => handleTogglePaid(inv)}
+                        disabled={markingPaid === inv._id}
+                        title={inv.paid ? 'Mark as Unpaid' : 'Mark as Paid'}
+                        style={inv.paid ? styles.btnUnpaidAction : styles.btnPaidAction}
+                      >
+                        {markingPaid === inv._id
+                          ? <div className="spinner spinner-sm" />
+                          : inv.paid ? '↩ Unpaid' : '✓ Paid'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -207,6 +278,38 @@ const InvoiceTable = ({ refreshKey }) => {
 };
 
 const styles = {
+  tabRow: {
+    display: 'flex',
+    gap: '6px',
+    marginBottom: '14px',
+    flexWrap: 'wrap',
+  },
+  tabBtn: {
+    padding: '7px 16px',
+    border: '1.5px solid var(--gray-200)',
+    borderRadius: '20px',
+    background: '#fff',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '13px',
+    color: 'var(--gray-600)',
+    transition: 'all 0.18s ease',
+    letterSpacing: '0.01em',
+  },
+  tabBtnActive: {
+    background: 'var(--hca-green)',
+    color: '#fff',
+    borderColor: 'var(--hca-green)',
+    boxShadow: '0 2px 8px rgba(30,70,32,0.18)',
+  },
+  tabBtnPaid: {
+    background: '#1b6b2b',
+    borderColor: '#1b6b2b',
+  },
+  tabBtnUnpaid: {
+    background: '#b7620a',
+    borderColor: '#b7620a',
+  },
   filterPanel: {
     background: 'var(--white)',
     border: '1px solid var(--gray-200)',
@@ -228,6 +331,58 @@ const styles = {
     padding: '3px 8px',
     borderRadius: '4px',
     fontSize: '12px',
+  },
+  paidRow: {
+    background: '#f0faf2',
+    opacity: 0.92,
+  },
+  badgePaid: {
+    display: 'inline-block',
+    padding: '3px 10px',
+    borderRadius: '12px',
+    fontSize: '11px',
+    fontWeight: '700',
+    background: '#e6f9ec',
+    color: '#1b6b2b',
+    border: '1.5px solid #a8dfb8',
+    letterSpacing: '0.04em',
+    whiteSpace: 'nowrap',
+  },
+  badgeUnpaid: {
+    display: 'inline-block',
+    padding: '3px 10px',
+    borderRadius: '12px',
+    fontSize: '11px',
+    fontWeight: '700',
+    background: '#fff8ec',
+    color: '#b7620a',
+    border: '1.5px solid #f5c87a',
+    letterSpacing: '0.04em',
+    whiteSpace: 'nowrap',
+  },
+  btnPaidAction: {
+    background: '#1b6b2b',
+    color: '#fff',
+    border: '1.5px solid #1b6b2b',
+    borderRadius: '6px',
+    padding: '4px 10px',
+    cursor: 'pointer',
+    fontWeight: '700',
+    fontSize: '12px',
+    whiteSpace: 'nowrap',
+    transition: 'all 0.15s',
+  },
+  btnUnpaidAction: {
+    background: '#fff',
+    color: '#b7620a',
+    border: '1.5px solid #f5c87a',
+    borderRadius: '6px',
+    padding: '4px 10px',
+    cursor: 'pointer',
+    fontWeight: '700',
+    fontSize: '12px',
+    whiteSpace: 'nowrap',
+    transition: 'all 0.15s',
   },
 };
 
