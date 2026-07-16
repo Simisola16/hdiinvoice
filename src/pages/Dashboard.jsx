@@ -60,7 +60,7 @@ const Dashboard = () => {
             <img src="/hcaLogo.png" alt="HCA Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div>
-            <div style={styles.navTitle}>HALAL CERTIFICATION AUTHORITY</div>
+            <div style={styles.navTitle}>HALAL AND HARAM DISTINCTION DEVELOPMENT INITIATIVE (HDi)</div>
             <div style={styles.navSub}>Invoice Management System</div>
           </div>
         </div>

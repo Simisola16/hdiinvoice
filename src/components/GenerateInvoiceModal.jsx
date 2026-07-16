@@ -621,6 +621,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                     <div style={styles.pvHeaderArabic}>مبادرة ترسيخ التمييز بين الحلال والحرام</div>
                     <div style={styles.pvHeaderTitle}>HALAL AND HARAM DISTINCTION DEVELOPMENT INITIATIVE (HDi)</div>
                     <div style={styles.pvHeaderSub}>(Formerly HALAL CERTIFICATION AUTHORITY (HCA))</div>
+                    
                     <div style={styles.pvHeaderAddress}>
                       <span style={{ color: '#c00000', fontWeight: 'bold' }}>Corporate Secretariat:</span>{' '}
                       <span style={{ color: '#000' }}>9a, Wing 1, Abiodun Fasakin St., Anthony Village, Idi-Iroko Bus-Stop, Lagos.</span>
