@@ -17,7 +17,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [modal, setModal] = useState(null); // 'addCompany' | 'generateInvoice' | 'addUser'
   const [tableKey, setTableKey] = useState(0); // increment to force table refresh
-  const [stats, setStats] = useState({ total: 0, thisMonth: 0, totalAmount: 0 });
+  const [stats, setStats] = useState({ total: 0, thisMonth: 0, totalAmount: 0, totalPaid: 0, totalUnpaid: 0 });
   const [toastMsg, setToastMsg] = useState('');
 
   // ── Load stats ─────────────────────────────────────────────────────────────
@@ -32,7 +32,15 @@ const Dashboard = () => {
           return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
         });
         const totalAmount = invoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
-        setStats({ total: invoices.length, thisMonth: thisMonth.length, totalAmount });
+        const totalPaid = invoices.filter((inv) => inv.paid).reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
+        const totalUnpaid = invoices.filter((inv) => !inv.paid).reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
+        setStats({
+          total: invoices.length,
+          thisMonth: thisMonth.length,
+          totalAmount,
+          totalPaid,
+          totalUnpaid
+        });
       } catch {}
     };
     loadStats();
@@ -112,9 +120,17 @@ const Dashboard = () => {
             <div className="stat-value" style={{ color: 'var(--hca-gold)' }}>{stats.thisMonth}</div>
             <div className="stat-label">This Month</div>
           </div>
-          <div className="stat-card" style={{ borderLeftColor: '#2d6a31' }}>
-            <div className="stat-value" style={{ fontSize: '22px' }}>₦{fmt(stats.totalAmount)}</div>
+          <div className="stat-card" style={{ borderLeftColor: '#7a9a7a' }}>
+            <div className="stat-value" style={{ fontSize: '20px', color: 'var(--text-primary)' }}>₦{fmt(stats.totalAmount)}</div>
             <div className="stat-label">Total Invoiced</div>
+          </div>
+          <div className="stat-card" style={{ borderLeftColor: '#1b6b2b' }}>
+            <div className="stat-value" style={{ fontSize: '20px', color: '#1b6b2b' }}>₦{fmt(stats.totalPaid)}</div>
+            <div className="stat-label">Total Paid</div>
+          </div>
+          <div className="stat-card" style={{ borderLeftColor: '#b7620a' }}>
+            <div className="stat-value" style={{ fontSize: '20px', color: '#b7620a' }}>₦{fmt(stats.totalUnpaid)}</div>
+            <div className="stat-label">Total Outstanding</div>
           </div>
         </div>
 
