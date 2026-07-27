@@ -50,8 +50,8 @@ const Login = () => {
             <img src="/hcaLogo.png" alt="HCA Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div>
-            <h1 style={styles.brandTitle}>HALAL CERTIFICATION</h1>
-            <h1 style={styles.brandTitleGold}>AUTHORITY</h1>
+            <h1 style={styles.brandTitle}>HALAL AND HARAM DISTINCTION</h1>
+            <h1 style={styles.brandTitleGold}>DEVELOPMENT INITIATIVE (HDI)</h1>
             <p style={styles.brandSub}>Invoice Management System</p>
           </div>
         </div>
