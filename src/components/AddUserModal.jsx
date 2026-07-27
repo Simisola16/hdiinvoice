@@ -30,6 +30,7 @@ const AddUserModal = ({ onClose, onSuccess }) => {
       const res = await createUser(form);
       onSuccess?.(res.data.user);
       onClose();
+    } catch (err) {
       setError(getErrorMessage(err, 'Failed to create user.'));
     } finally {
       setLoading(false);

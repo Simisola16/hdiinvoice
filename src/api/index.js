@@ -1,7 +1,7 @@
 /**
  * Axios API instance
- * All requests go through the Vite proxy to http://localhost:5000/api
- * Credentials (cookies) are sent automatically.
+ * Auth is handled via Authorization: Bearer <token> header.
+ * The token is stored in localStorage and attached via setAuthToken().
  */
 import axios from 'axios';
 
@@ -11,8 +11,50 @@ const api = axios.create({
       ? '/api'
       : 'https://hdiinvoiceapi.onrender.com/api'
   ),
-  withCredentials: true,   // send httpOnly cookie on every request
+  withCredentials: true,
 });
+
+/**
+ * Request Interceptor: Automatically attaches JWT Bearer token from localStorage
+ * on every outgoing request if present.
+ */
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('hca_token');
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => Promise.reject(error));
+
+/**
+ * Response Interceptor: Catches 401 Unauthorized errors globally
+ * Clears stored credentials and redirects to /login if token is expired/invalid.
+ */
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('hca_token');
+      localStorage.removeItem('hca_user');
+      delete api.defaults.headers.common['Authorization'];
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * Attaches (or removes) the JWT to every outgoing request manually if needed.
+ */
+export const setAuthToken = (token) => {
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common['Authorization'];
+  }
+};
 
 export const getErrorMessage = (err, fallback = 'An error occurred. Please try again.') => {
   const data = err.response?.data;
