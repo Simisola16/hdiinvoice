@@ -197,7 +197,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
 
       // Trigger PDF download
       const blob = new Blob([res.data], { type: 'application/pdf' });
-      const url  = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       const disposition = res.headers?.['content-disposition'] || '';
       const match = disposition.match(/filename="?([^"]+)"?/);
@@ -314,7 +314,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                         <div
                           key={c._id}
                           style={styles.dropdownItem}
-                        onClick={async () => {
+                          onClick={async () => {
                             // Immediately set what we know from the list
                             setCompanyId(c._id);
                             setSelectedCompany(c);
@@ -615,13 +615,13 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                 {/* ── Header ── */}
                 <div style={styles.pvHeader}>
                   <div style={styles.pvLogoBlock}>
-                     <img src="/hcaLogo.png" alt="HDI Crest" style={styles.pvLogoImg} />
+                    <img src="/hcaLogo.png" alt="HDI Crest" style={styles.pvLogoImg} />
                   </div>
                   <div style={styles.pvHeaderText}>
                     <div style={styles.pvHeaderArabic}>مبادرة ترسيخ التمييز بين الحلال والحرام</div>
                     <div style={styles.pvHeaderTitle}>HALAL AND HARAM DISTINCTION DEVELOPMENT INITIATIVE (HDi)</div>
                     <div style={styles.pvHeaderSub}>(Formerly HALAL CERTIFICATION AUTHORITY (HCA))</div>
-                    
+
                     <div style={styles.pvHeaderAddress}>
                       <span style={{ color: '#c00000', fontWeight: 'bold' }}>Corporate Secretariat:</span>{' '}
                       <span style={{ color: '#000' }}>9a, Wing 1, Abiodun Fasakin St., Anthony Village, Idi-Iroko Bus-Stop, Lagos.</span>
@@ -644,7 +644,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                   <div style={styles.pvInvoiceTitle}>INVOICE</div>
                   <div style={styles.pvInvNoBlock}>
                     <span>Invoice No:</span>
-                    <span style={styles.pvUnderlineValue}>HCA/26/XXXX</span>
+                    <span style={styles.pvUnderlineValue}>HDi/26/XXXX</span>
                   </div>
                 </div>
 
