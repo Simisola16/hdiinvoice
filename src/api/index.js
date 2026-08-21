@@ -9,7 +9,7 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || (
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
       ? '/api'
-      : 'https://hdiinvoice-api.vercel.app/api'
+      : 'https://108.181.161.189.sslip.io/api'
   ),
   withCredentials: true,
 });
