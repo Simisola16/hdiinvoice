@@ -51,7 +51,7 @@ const Login = () => {
           </div>
           <div>
             <h1 style={styles.brandTitle}>HALAL AND HARAM DISTINCTION</h1>
-            <h1 style={styles.brandTitleGold}>DEVELOPMENT INITIATIVE (HDI)</h1>
+            <h1 style={styles.brandTitleGold}>DEVELOPMENT INITIATIVE</h1>
             <p style={styles.brandSub}>Invoice Management System</p>
           </div>
         </div>
