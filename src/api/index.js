@@ -114,5 +114,10 @@ export const getInvoicePdf = (id) =>
 export const markInvoicePaid = (id) =>
   api.patch(`/invoices/${id}/paid`);
 
+/**
+ * Deletes an invoice permanently.
+ */
+export const deleteInvoice = (id) =>
+  api.delete(`/invoices/${id}`);
 
 export default api;

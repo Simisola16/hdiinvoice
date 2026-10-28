@@ -4,7 +4,7 @@
  * Columns: Invoice No | Company | Date | Service | Grand Total | Created By | Status | Actions
  */
 import { useState, useEffect, useCallback } from 'react';
-import { getInvoices, getInvoicePdf, markInvoicePaid } from '../api';
+import { getInvoices, getInvoicePdf, markInvoicePaid, deleteInvoice } from '../api';
 
 const fmt = (n) =>
   Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -19,6 +19,7 @@ const InvoiceTable = ({ refreshKey }) => {
   const [loading, setLoading]         = useState(false);
   const [downloading, setDownloading] = useState(null); // invoice id being downloaded
   const [markingPaid, setMarkingPaid] = useState(null); // invoice id being toggled
+  const [deleting, setDeleting]       = useState(null); // invoice id being deleted
   const [statusTab, setStatusTab]     = useState('all'); // 'all' | 'paid' | 'unpaid'
   const [filters, setFilters]         = useState({
     dateFrom: '', dateTo: '', amount: '', companyName: '',
@@ -89,6 +90,21 @@ const InvoiceTable = ({ refreshKey }) => {
       alert('Failed to update payment status. Please try again.');
     } finally {
       setMarkingPaid(null);
+    }
+  };
+
+  const handleDelete = async (invoice) => {
+    if (!window.confirm(`Are you sure you want to permanently delete invoice ${invoice.invoiceNumber}?`)) {
+      return;
+    }
+    setDeleting(invoice._id);
+    try {
+      await deleteInvoice(invoice._id);
+      setInvoices((prev) => prev.filter((inv) => inv._id !== invoice._id));
+    } catch (err) {
+      alert('Failed to delete invoice. Please try again.');
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -225,7 +241,16 @@ const InvoiceTable = ({ refreshKey }) => {
                       : inv.serviceDescription || '—'}
                   </td>
                   <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--hca-green)', whiteSpace: 'nowrap' }}>
-                    ₦{fmt(inv.grandTotal)}
+                    {inv.currency === 'USD' ? (
+                      <div>
+                        <div>${fmt(inv.grandTotal)}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>
+                          ≈ ₦{fmt(inv.grandTotalInNaira || (inv.grandTotal * (inv.exchangeRate || 1)))}
+                        </div>
+                      </div>
+                    ) : (
+                      `₦${fmt(inv.grandTotal)}`
+                    )}
                   </td>
                   <td>
                     <span className="badge badge-green">{inv.createdBy}</span>
@@ -264,6 +289,25 @@ const InvoiceTable = ({ refreshKey }) => {
                         {markingPaid === inv._id
                           ? <div className="spinner spinner-sm" />
                           : inv.paid ? '↩ Unpaid' : '✓ Paid'}
+                      </button>
+                      {/* Delete */}
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => handleDelete(inv)}
+                        disabled={deleting === inv._id}
+                        title="Delete Invoice"
+                        style={{
+                          background: '#fff',
+                          color: '#dc2626',
+                          border: '1px solid #fca5a5',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {deleting === inv._id
+                          ? <div className="spinner spinner-sm" />
+                          : '🗑️'}
                       </button>
                     </div>
                   </td>

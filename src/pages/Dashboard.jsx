@@ -31,9 +31,14 @@ const Dashboard = () => {
           const d = new Date(inv.date);
           return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
         });
-        const totalAmount = invoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
-        const totalPaid = invoices.filter((inv) => inv.paid).reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
-        const totalUnpaid = invoices.filter((inv) => !inv.paid).reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
+        const getInvNaira = (inv) => {
+          if (inv.grandTotalInNaira != null) return Number(inv.grandTotalInNaira);
+          if (inv.currency === 'USD') return (Number(inv.grandTotal) || 0) * (Number(inv.exchangeRate) || 1);
+          return Number(inv.grandTotal) || 0;
+        };
+        const totalAmount = invoices.reduce((sum, inv) => sum + getInvNaira(inv), 0);
+        const totalPaid = invoices.filter((inv) => inv.paid).reduce((sum, inv) => sum + getInvNaira(inv), 0);
+        const totalUnpaid = invoices.filter((inv) => !inv.paid).reduce((sum, inv) => sum + getInvNaira(inv), 0);
         setStats({
           total: invoices.length,
           thisMonth: thisMonth.length,

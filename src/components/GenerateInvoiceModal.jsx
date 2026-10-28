@@ -38,9 +38,9 @@ const convertLessThanOneThousand = (n) => {
   return str.trim();
 };
 
-const numberToWords = (num) => {
-  const intAmount = Math.round(num);
-  if (intAmount === 0) return 'ZERO NAIRA ONLY';
+const convertNumberToWords = (num) => {
+  const intAmount = Math.floor(Math.abs(num));
+  if (intAmount === 0) return 'ZERO';
   let temp = intAmount;
   let scaleIdx = 0;
   let result = '';
@@ -54,7 +54,29 @@ const numberToWords = (num) => {
     temp = Math.floor(temp / 1000);
     scaleIdx++;
   }
-  return result.trim() + ' NAIRA ONLY';
+  return result.trim();
+};
+
+const numberToWords = (num, currency = 'NGN', exchangeRate = 1, nairaTotal = null) => {
+  if (currency === 'USD') {
+    const dollars = Math.floor(num);
+    const cents = Math.round((num - dollars) * 100);
+    let usdText = `${convertNumberToWords(dollars)} US DOLLARS`;
+    if (cents > 0) {
+      usdText += ` AND ${convertNumberToWords(cents)} CENTS`;
+    }
+    usdText += ' ONLY';
+
+    const nairaAmount = nairaTotal != null
+      ? Math.round(nairaTotal)
+      : Math.round(num * (parseFloat(exchangeRate) || 1));
+    const nairaText = `${convertNumberToWords(nairaAmount)} NAIRA ONLY`;
+    return `${usdText} (EQUIVALENT TO ${nairaText})`;
+  }
+
+  const intAmount = Math.round(num);
+  if (intAmount === 0) return 'ZERO NAIRA ONLY';
+  return `${convertNumberToWords(intAmount)} NAIRA ONLY`;
 };
 
 const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
@@ -67,11 +89,22 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
   const [tel, setTel] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [currency, setCurrency] = useState('NGN'); // 'NGN' | 'USD'
+  const [exchangeRate, setExchangeRate] = useState('1500');
   const [vatPercent, setVatPercent] = useState('7.5');
   const [discountPercent, setDiscountPercent] = useState('0');
   const [date, setDate] = useState(toInputDate(new Date()));
   const [items, setItems] = useState([{ description: 'HALAL CERTIFICATION', rate: '', qty: '1' }]);
-  const [calc, setCalc] = useState({ subTotal: 0, discountAmount: 0, vatAmount: 0, grandTotal: 0 });
+  const [calc, setCalc] = useState({
+    subTotal: 0,
+    discountAmount: 0,
+    vatAmount: 0,
+    grandTotal: 0,
+    subTotalNaira: 0,
+    discountAmountNaira: 0,
+    vatAmountNaira: 0,
+    grandTotalNaira: 0
+  });
   const [loading, setLoading] = useState(false);
   const [fetchingCompanies, setFetchingCompanies] = useState(false);
   const [error, setError] = useState('');
@@ -105,8 +138,25 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
     const vatPct = parseFloat(vatPercent) || 0;
     const vatAmount = parseFloat((vatBase * (vatPct / 100)).toFixed(2));
     const grandTotal = parseFloat((vatBase + vatAmount).toFixed(2));
-    setCalc({ subTotal, discountAmount, vatAmount, grandTotal });
-  }, [items, vatPercent, discountPercent]);
+
+    const exRate = parseFloat(exchangeRate) || 1;
+    const isUsd = currency === 'USD';
+    const subTotalNaira = isUsd ? parseFloat((subTotal * exRate).toFixed(2)) : subTotal;
+    const discountAmountNaira = isUsd ? parseFloat((discountAmount * exRate).toFixed(2)) : discountAmount;
+    const vatAmountNaira = isUsd ? parseFloat((vatAmount * exRate).toFixed(2)) : vatAmount;
+    const grandTotalNaira = isUsd ? parseFloat((grandTotal * exRate).toFixed(2)) : grandTotal;
+
+    setCalc({
+      subTotal,
+      discountAmount,
+      vatAmount,
+      grandTotal,
+      subTotalNaira,
+      discountAmountNaira,
+      vatAmountNaira,
+      grandTotalNaira
+    });
+  }, [items, vatPercent, discountPercent, currency, exchangeRate]);
 
   // ── Multiple Items Handlers ────────────────────────────────────────────────
   const handleItemChange = (index, field, value) => {
@@ -185,6 +235,8 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
           tel: tel.trim(),
           contactPerson: contactPerson.trim()
         },
+        currency,
+        exchangeRate: currency === 'USD' ? (parseFloat(exchangeRate) || 1500) : 1,
         items: items.map(item => ({
           description: item.description.trim(),
           rate: parseFloat(item.rate),
@@ -434,6 +486,96 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                   </div>
                 </div>
 
+                {/* Currency & Exchange Rate Selector */}
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  marginTop: '16px',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e4620' }}>
+                      Invoice Currency:
+                    </span>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setCurrency('NGN')}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          border: currency === 'NGN' ? '1.5px solid #1e4620' : '1px solid #cbd5e1',
+                          background: currency === 'NGN' ? '#1e4620' : '#fff',
+                          color: currency === 'NGN' ? '#fff' : '#475569',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        🇳🇬 NGN (₦)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCurrency('USD')}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          border: currency === 'USD' ? '1.5px solid #1e4620' : '1px solid #cbd5e1',
+                          background: currency === 'USD' ? '#1e4620' : '#fff',
+                          color: currency === 'USD' ? '#fff' : '#475569',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        🇺🇸 USD ($)
+                      </button>
+                    </div>
+                  </div>
+
+                  {currency === 'USD' && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ecfdf5', padding: '6px 12px', borderRadius: '6px', border: '1px solid #a7f3d0' }}>
+                      <label htmlFor="fxRateInput" style={{ fontSize: '12px', fontWeight: 'bold', color: '#065f46', margin: 0 }}>
+                        Exchange Rate (₦ / $1):
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <span style={{ fontWeight: 'bold', color: '#065f46', fontSize: '13px' }}>₦</span>
+                        <input
+                          id="fxRateInput"
+                          type="number"
+                          min="1"
+                          step="any"
+                          value={exchangeRate}
+                          onChange={(e) => setExchangeRate(e.target.value)}
+                          placeholder="1500"
+                          style={{
+                            width: '85px',
+                            padding: '4px 8px',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                            borderRadius: '4px',
+                            border: '1px solid #059669',
+                            background: '#fff',
+                            color: '#065f46'
+                          }}
+                        />
+                      </div>
+                      <span style={{ fontSize: '11px', color: '#047857' }}>
+                        ($1 = ₦{fmt(exchangeRate || 0)})
+                      </span>
+                    </div>
+                  )}
+                </div>
+
                 {/* Service Line Items */}
                 <div style={{ marginTop: '20px', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -467,7 +609,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                       </div>
                       <div className="item-rate-field">
                         <label className="form-label" style={{ fontSize: '11px' }}>
-                          Rate (₦) <span className="required">*</span>
+                          Rate ({currency === 'USD' ? '$' : '₦'}) <span className="required">*</span>
                         </label>
                         <input
                           type="number"
@@ -479,6 +621,11 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                           onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
                           disabled={loading}
                         />
+                        {currency === 'USD' && parseFloat(item.rate) > 0 && (
+                          <div style={{ fontSize: '10px', color: '#059669', marginTop: '2px', fontWeight: '500' }}>
+                            ≈ ₦{fmt((parseFloat(item.rate) || 0) * (parseFloat(exchangeRate) || 1))}
+                          </div>
+                        )}
                       </div>
                       <div className="item-qty-field">
                         <label className="form-label" style={{ fontSize: '11px' }}>
@@ -565,17 +712,29 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                 {/* Live calculation preview */}
                 {calc.subTotal > 0 && (
                   <div className="calc-preview">
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--hca-green)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Calculation Preview
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--hca-green)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Calculation Preview
+                      </div>
+                      {currency === 'USD' && (
+                        <span style={{ fontSize: '11px', color: '#047857', background: '#ecfdf5', padding: '2px 8px', borderRadius: '4px', fontWeight: '600', border: '1px solid #a7f3d0' }}>
+                          Conversion: $1.00 = ₦{fmt(exchangeRate || 1)}
+                        </span>
+                      )}
                     </div>
                     {items.map((item, idx) => {
                       const r = parseFloat(item.rate) || 0;
                       const q = parseFloat(item.qty) || 0;
                       if (r > 0) {
+                        const rowTot = r * q;
+                        const rowTotNaira = rowTot * (parseFloat(exchangeRate) || 1);
                         return (
                           <div className="calc-row" key={idx} style={{ fontSize: '12px', borderBottom: '1px dashed var(--gray-100)', paddingBottom: '4px' }}>
-                            <span className="text-muted">Item #{idx + 1} ({q} × ₦{fmt(r)})</span>
-                            <span>₦{fmt(r * q)}</span>
+                            <span className="text-muted">Item #{idx + 1} ({q} × {currency === 'USD' ? '$' : '₦'}{fmt(r)})</span>
+                            <span>
+                              <strong>{currency === 'USD' ? '$' : '₦'}{fmt(rowTot)}</strong>
+                              {currency === 'USD' && <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '6px' }}>(₦{fmt(rowTotNaira)})</span>}
+                            </span>
                           </div>
                         );
                       }
@@ -583,21 +742,39 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                     })}
                     <div className="calc-row" style={{ marginTop: '8px' }}>
                       <span>Sub Total</span>
-                      <span><strong>₦{fmt(calc.subTotal)}</strong></span>
+                      <span>
+                        <strong>{currency === 'USD' ? '$' : '₦'}{fmt(calc.subTotal)}</strong>
+                        {currency === 'USD' && <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '6px' }}>(₦{fmt(calc.subTotalNaira)})</span>}
+                      </span>
                     </div>
                     {(parseFloat(discountPercent) || 0) > 0 && (
                       <div className="calc-row" style={{ color: '#c00000' }}>
                         <span>Discount ({discountPercent}%)</span>
-                        <span>- ₦{fmt(calc.discountAmount)}</span>
+                        <span>
+                          <strong>- {currency === 'USD' ? '$' : '₦'}{fmt(calc.discountAmount)}</strong>
+                          {currency === 'USD' && <span style={{ fontSize: '11px', marginLeft: '6px' }}>(- ₦{fmt(calc.discountAmountNaira)})</span>}
+                        </span>
                       </div>
                     )}
                     <div className="calc-row">
                       <span>VAT ({vatPercent || 0}%)</span>
-                      <span>₦{fmt(calc.vatAmount)}</span>
+                      <span>
+                        <strong>{currency === 'USD' ? '$' : '₦'}{fmt(calc.vatAmount)}</strong>
+                        {currency === 'USD' && <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '6px' }}>(₦{fmt(calc.vatAmountNaira)})</span>}
+                      </span>
                     </div>
-                    <div className="calc-row total">
+                    <div className="calc-row total" style={{ alignItems: 'flex-start' }}>
                       <span>GRAND TOTAL</span>
-                      <span>₦{fmt(calc.grandTotal)}</span>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '15px', fontWeight: 'bold' }}>
+                          {currency === 'USD' ? '$' : '₦'}{fmt(calc.grandTotal)}
+                        </div>
+                        {currency === 'USD' && (
+                          <div style={{ fontSize: '12px', color: '#047857', fontWeight: 'bold', marginTop: '2px' }}>
+                            ₦{fmt(calc.grandTotalNaira)} (Naira Equivalent)
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -673,9 +850,9 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                       <tr style={{ backgroundColor: '#c7e0b5' }}>
                         <th style={styles.pvTh}>S/N</th>
                         <th style={{ ...styles.pvTh, textAlign: 'left', paddingLeft: '8px' }}>SERVICE DESCRIPTION</th>
-                        <th style={styles.pvTh}>RATE</th>
+                        <th style={styles.pvTh}>RATE ({currency === 'USD' ? '$' : '₦'})</th>
                         <th style={styles.pvTh}>QTY</th>
-                        <th style={styles.pvTh}>SUB TOTAL</th>
+                        <th style={styles.pvTh}>SUB TOTAL ({currency === 'USD' ? '$' : '₦'})</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -683,10 +860,10 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                         <tr style={{ height: '24px' }} key={idx}>
                           <td style={styles.pvTd}>{idx + 1}.</td>
                           <td style={{ ...styles.pvTd, textAlign: 'left', paddingLeft: '8px' }}>{item.description}</td>
-                          <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px' }}>{fmt(parseFloat(item.rate) || 0)}</td>
+                          <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px' }}>{currency === 'USD' ? '$' : '₦'}{fmt(parseFloat(item.rate) || 0)}</td>
                           <td style={styles.pvTd}>{item.qty}</td>
                           <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px' }}>
-                            {fmt((parseFloat(item.rate) || 0) * (parseFloat(item.qty) || 0))}
+                            {currency === 'USD' ? '$' : '₦'}{fmt((parseFloat(item.rate) || 0) * (parseFloat(item.qty) || 0))}
                           </td>
                         </tr>
                       ))}
@@ -697,7 +874,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                           <td style={{ ...styles.pvTd, textAlign: 'left', paddingLeft: '8px', color: '#c00000', fontStyle: 'italic', fontWeight: 'bold' }}>DISCOUNT ({discountPercent}%)</td>
                           <td style={styles.pvTd}></td>
                           <td style={styles.pvTd}></td>
-                          <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px', color: '#c00000', fontWeight: 'bold' }}>- {fmt(calc.discountAmount)}</td>
+                          <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px', color: '#c00000', fontWeight: 'bold' }}>- {currency === 'USD' ? '$' : '₦'}{fmt(calc.discountAmount)}</td>
                         </tr>
                       )}
                       {/* VAT row */}
@@ -706,7 +883,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                         <td style={{ ...styles.pvTd, textAlign: 'left', paddingLeft: '8px' }}>VAT OF {vatPercent || 0}%</td>
                         <td style={styles.pvTd}></td>
                         <td style={styles.pvTd}></td>
-                        <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px' }}>{fmt(calc.vatAmount)}</td>
+                        <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px' }}>{currency === 'USD' ? '$' : '₦'}{fmt(calc.vatAmount)}</td>
                       </tr>
 
                       {/* Grand Total Footer */}
@@ -728,9 +905,24 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                           <span style={styles.pvBankUnderline}>
                             <span style={styles.pvBankLabel}>Sort Code:</span> <span style={styles.pvBankValue}>301150303</span>
                           </span>
+                          {currency === 'USD' && (
+                            <>
+                              <br />
+                              <div style={{ marginTop: '4px', padding: '3px 6px', backgroundColor: '#e8f4fd', border: '1px solid #b8daff', borderRadius: '3px', fontSize: '8.5px', color: '#1b3a82', fontWeight: 'bold', display: 'inline-block' }}>
+                                * FX Rate: $1.00 = ₦{fmt(exchangeRate || 1)} &nbsp;|&nbsp; Payable Naira Equivalent: ₦{fmt(calc.grandTotalNaira)}
+                              </div>
+                            </>
+                          )}
                         </td>
                         <td style={styles.pvGrandLabelCell}>GRAND TOTAL</td>
-                        <td style={styles.pvGrandAmountCell}>N{fmt(calc.grandTotal)}</td>
+                        <td style={styles.pvGrandAmountCell}>
+                          {currency === 'USD' ? '$' : '₦'}{fmt(calc.grandTotal)}
+                          {currency === 'USD' && (
+                            <div style={{ fontSize: '9.5px', fontWeight: 'bold', color: '#1e4620', marginTop: '3px' }}>
+                              (₦{fmt(calc.grandTotalNaira)})
+                            </div>
+                          )}
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -739,7 +931,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                 {/* Amount in words */}
                 <div style={{ marginTop: '12px', fontSize: '11px', marginBottom: '8px' }}>
                   <span>Total Amount in Words: </span>
-                  <strong style={{ textDecoration: 'underline' }}>{numberToWords(calc.grandTotal).toUpperCase()}</strong>
+                  <strong style={{ textDecoration: 'underline' }}>{numberToWords(calc.grandTotal, currency, exchangeRate, calc.grandTotalNaira).toUpperCase()}</strong>
                 </div>
 
                 {/* Pinned Bottom Footer */}
