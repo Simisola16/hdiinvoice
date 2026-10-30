@@ -66,12 +66,7 @@ const numberToWords = (num, currency = 'NGN', exchangeRate = 1, nairaTotal = nul
       usdText += ` AND ${convertNumberToWords(cents)} CENTS`;
     }
     usdText += ' ONLY';
-
-    const nairaAmount = nairaTotal != null
-      ? Math.round(nairaTotal)
-      : Math.round(num * (parseFloat(exchangeRate) || 1));
-    const nairaText = `${convertNumberToWords(nairaAmount)} NAIRA ONLY`;
-    return `${usdText} (EQUIVALENT TO ${nairaText})`;
+    return usdText;
   }
 
   const intAmount = Math.round(num);
@@ -752,7 +747,6 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                         <span>Discount ({discountPercent}%)</span>
                         <span>
                           <strong>- {currency === 'USD' ? '$' : '₦'}{fmt(calc.discountAmount)}</strong>
-                          {currency === 'USD' && <span style={{ fontSize: '11px', marginLeft: '6px' }}>(- ₦{fmt(calc.discountAmountNaira)})</span>}
                         </span>
                       </div>
                     )}
@@ -760,21 +754,13 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                       <span>VAT ({vatPercent || 0}%)</span>
                       <span>
                         <strong>{currency === 'USD' ? '$' : '₦'}{fmt(calc.vatAmount)}</strong>
-                        {currency === 'USD' && <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '6px' }}>(₦{fmt(calc.vatAmountNaira)})</span>}
                       </span>
                     </div>
-                    <div className="calc-row total" style={{ alignItems: 'flex-start' }}>
+                    <div className="calc-row total">
                       <span>GRAND TOTAL</span>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '15px', fontWeight: 'bold' }}>
-                          {currency === 'USD' ? '$' : '₦'}{fmt(calc.grandTotal)}
-                        </div>
-                        {currency === 'USD' && (
-                          <div style={{ fontSize: '12px', color: '#047857', fontWeight: 'bold', marginTop: '2px' }}>
-                            ₦{fmt(calc.grandTotalNaira)} (Naira Equivalent)
-                          </div>
-                        )}
-                      </div>
+                      <strong>
+                        {currency === 'USD' ? '$' : '₦'}{fmt(calc.grandTotal)}
+                      </strong>
                     </div>
                   </div>
                 )}
@@ -905,23 +891,10 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                           <span style={styles.pvBankUnderline}>
                             <span style={styles.pvBankLabel}>Sort Code:</span> <span style={styles.pvBankValue}>301150303</span>
                           </span>
-                          {currency === 'USD' && (
-                            <>
-                              <br />
-                              <div style={{ marginTop: '4px', padding: '3px 6px', backgroundColor: '#e8f4fd', border: '1px solid #b8daff', borderRadius: '3px', fontSize: '8.5px', color: '#1b3a82', fontWeight: 'bold', display: 'inline-block' }}>
-                                * FX Rate: $1.00 = ₦{fmt(exchangeRate || 1)} &nbsp;|&nbsp; Payable Naira Equivalent: ₦{fmt(calc.grandTotalNaira)}
-                              </div>
-                            </>
-                          )}
                         </td>
                         <td style={styles.pvGrandLabelCell}>GRAND TOTAL</td>
                         <td style={styles.pvGrandAmountCell}>
                           {currency === 'USD' ? '$' : '₦'}{fmt(calc.grandTotal)}
-                          {currency === 'USD' && (
-                            <div style={{ fontSize: '9.5px', fontWeight: 'bold', color: '#1e4620', marginTop: '3px' }}>
-                              (₦{fmt(calc.grandTotalNaira)})
-                            </div>
-                          )}
                         </td>
                       </tr>
                     </tbody>
