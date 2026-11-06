@@ -89,7 +89,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
   const [vatPercent, setVatPercent] = useState('7.5');
   const [discountPercent, setDiscountPercent] = useState('0');
   const [date, setDate] = useState(toInputDate(new Date()));
-  const [items, setItems] = useState([{ description: 'HALAL CERTIFICATION', rate: '', qty: '1' }]);
+  const [items, setItems] = useState([{ description: 'HALAL CERTIFICATION', rate: '', qty: '1', applyVat: true }]);
   const [calc, setCalc] = useState({
     subTotal: 0,
     discountAmount: 0,
@@ -122,17 +122,27 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
   // ── Live calculation ───────────────────────────────────────────────────────
   useEffect(() => {
     let subTotal = 0;
+    let taxableSubTotal = 0;
     items.forEach((item) => {
       const r = parseFloat(item.rate) || 0;
       const q = parseFloat(item.qty) || 0;
-      subTotal += r * q;
+      const itemTot = r * q;
+      subTotal += itemTot;
+      const applyVat = item.applyVat !== undefined ? Boolean(item.applyVat) : true;
+      if (applyVat) {
+        taxableSubTotal += itemTot;
+      }
     });
     const discPct = parseFloat(discountPercent) || 0;
     const discountAmount = parseFloat((subTotal * (discPct / 100)).toFixed(2));
-    const vatBase = parseFloat((subTotal - discountAmount).toFixed(2));
+    
+    // Proportional taxable base after discount
+    const discMultiplier = discPct > 0 ? (1 - discPct / 100) : 1;
+    const vatBase = parseFloat((taxableSubTotal * discMultiplier).toFixed(2));
+
     const vatPct = parseFloat(vatPercent) || 0;
     const vatAmount = parseFloat((vatBase * (vatPct / 100)).toFixed(2));
-    const grandTotal = parseFloat((vatBase + vatAmount).toFixed(2));
+    const grandTotal = parseFloat(((subTotal - discountAmount) + vatAmount).toFixed(2));
 
     const exRate = parseFloat(exchangeRate) || 1;
     const isUsd = currency === 'USD';
@@ -143,6 +153,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
 
     setCalc({
       subTotal,
+      taxableSubTotal,
       discountAmount,
       vatAmount,
       grandTotal,
@@ -164,7 +175,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
   };
 
   const handleAddItem = () => {
-    setItems((prevItems) => [...prevItems, { description: '', rate: '', qty: '1' }]);
+    setItems((prevItems) => [...prevItems, { description: '', rate: '', qty: '1', applyVat: true }]);
   };
 
   const handleRemoveItem = (index) => {
@@ -235,7 +246,8 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
         items: items.map(item => ({
           description: item.description.trim(),
           rate: parseFloat(item.rate),
-          qty: parseFloat(item.qty)
+          qty: parseFloat(item.qty),
+          applyVat: item.applyVat !== false
         })),
         vatPercent: (vatPercent !== '' && !isNaN(parseFloat(vatPercent))) ? parseFloat(vatPercent) : 0,
         discountPercent: parseFloat(discountPercent) || 0,
@@ -574,9 +586,31 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                 {/* Service Line Items */}
                 <div style={{ marginTop: '20px', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: 'var(--hca-green)' }}>
-                      Service Line Items
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: 'var(--hca-green)' }}>
+                        Service Line Items
+                      </span>
+                      {items.length > 1 && (
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => setItems(prev => prev.map(it => ({ ...it, applyVat: true })))}
+                            disabled={loading}
+                            style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', border: '1px solid #a7f3d0', background: '#ecfdf5', color: '#065f46', cursor: 'pointer', fontWeight: '500' }}
+                          >
+                            All +VAT
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setItems(prev => prev.map(it => ({ ...it, applyVat: false })))}
+                            disabled={loading}
+                            style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', cursor: 'pointer', fontWeight: '500' }}
+                          >
+                            All No-VAT
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <button
                       type="button"
                       className="btn btn-secondary btn-sm"
@@ -635,6 +669,36 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                           onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
                           disabled={loading}
                         />
+                      </div>
+                      <div className="item-vat-field">
+                        <label className="form-label" style={{ fontSize: '11px', textAlign: 'center' }}>
+                          VAT
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => handleItemChange(index, 'applyVat', item.applyVat === false ? true : false)}
+                          disabled={loading}
+                          title={item.applyVat !== false ? 'VAT applies to this item (click to remove)' : 'No VAT on this item (click to add)'}
+                          style={{
+                            height: '38px',
+                            width: '100%',
+                            padding: '0 8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            border: item.applyVat !== false ? '1px solid #1e4620' : '1px solid #cbd5e1',
+                            background: item.applyVat !== false ? '#ecfdf5' : '#f8fafc',
+                            color: item.applyVat !== false ? '#065f46' : '#64748b',
+                          }}
+                        >
+                          {item.applyVat !== false ? '✓ +VAT' : '✗ No VAT'}
+                        </button>
                       </div>
                       {items.length > 1 && (
                         <button
@@ -795,7 +859,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                         </span>
                       </div>
                     )}
-                    {(parseFloat(vatPercent) || 0) > 0 && (
+                    {(parseFloat(vatPercent) || 0) > 0 && calc.vatAmount > 0 && (
                       <div className="calc-row">
                         <span>VAT ({vatPercent}%)</span>
                         <span>
@@ -910,8 +974,8 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                           <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px', color: '#c00000', fontWeight: 'bold' }}>- {currency === 'USD' ? '$' : '₦'}{fmt(calc.discountAmount)}</td>
                         </tr>
                       )}
-                      {/* VAT row — only shown if VAT > 0 */}
-                      {(parseFloat(vatPercent) || 0) > 0 && (
+                      {/* VAT row — only shown if VAT > 0 and vatAmount > 0 */}
+                      {(parseFloat(vatPercent) || 0) > 0 && calc.vatAmount > 0 && (
                         <tr style={{ height: '24px' }}>
                           <td style={styles.pvTd}>{items.length + ((parseFloat(discountPercent) || 0) > 0 ? 2 : 1)}.</td>
                           <td style={{ ...styles.pvTd, textAlign: 'left', paddingLeft: '8px' }}>VAT OF {vatPercent}%</td>

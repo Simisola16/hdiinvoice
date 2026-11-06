@@ -384,6 +384,7 @@ select.form-input { cursor: pointer; appearance: auto; }
 .item-desc-field { flex: 3; min-width: 200px; }
 .item-rate-field { flex: 1.5; min-width: 100px; }
 .item-qty-field  { flex: 1; min-width: 70px; }
+.item-vat-field  { flex: 0 0 auto; min-width: 95px; }
 
 /* ── Component: Invoice Modal ─────────────────────────────────────────────────── */
 .modal-invoice {
