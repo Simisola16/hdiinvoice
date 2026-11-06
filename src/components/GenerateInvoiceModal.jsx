@@ -237,7 +237,7 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
           rate: parseFloat(item.rate),
           qty: parseFloat(item.qty)
         })),
-        vatPercent: parseFloat(vatPercent),
+        vatPercent: (vatPercent !== '' && !isNaN(parseFloat(vatPercent))) ? parseFloat(vatPercent) : 0,
         discountPercent: parseFloat(discountPercent) || 0,
         date,
       });
@@ -671,9 +671,49 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label" htmlFor="vatPercent">
-                      VAT %
-                    </label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label className="form-label" htmlFor="vatPercent" style={{ margin: 0 }}>
+                        VAT %
+                      </label>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          type="button"
+                          onClick={() => setVatPercent('7.5')}
+                          disabled={loading}
+                          style={{
+                            fontSize: '11px',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            border: (parseFloat(vatPercent) === 7.5 || vatPercent === '7.5') ? '1px solid #1e4620' : '1px solid #cbd5e1',
+                            background: (parseFloat(vatPercent) === 7.5 || vatPercent === '7.5') ? '#1e4620' : '#f8fafc',
+                            color: (parseFloat(vatPercent) === 7.5 || vatPercent === '7.5') ? '#fff' : '#64748b',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          7.5%
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setVatPercent('0')}
+                          disabled={loading}
+                          style={{
+                            fontSize: '11px',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            border: (parseFloat(vatPercent) === 0 || vatPercent === '0') ? '1px solid #c00000' : '1px solid #cbd5e1',
+                            background: (parseFloat(vatPercent) === 0 || vatPercent === '0') ? '#c00000' : '#f8fafc',
+                            color: (parseFloat(vatPercent) === 0 || vatPercent === '0') ? '#fff' : '#64748b',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          No VAT (0%)
+                        </button>
+                      </div>
+                    </div>
                     <input
                       id="vatPercent"
                       name="vatPercent"
@@ -682,11 +722,16 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                       max="100"
                       step="0.1"
                       className="form-input"
-                      placeholder="7.5"
+                      placeholder="0"
                       value={vatPercent}
                       onChange={(e) => setVatPercent(e.target.value)}
                       disabled={loading}
                     />
+                    {(parseFloat(vatPercent) === 0 || vatPercent === '0') && (
+                      <span style={{ fontSize: '11px', color: '#c00000', fontWeight: '600', display: 'block', marginTop: '3px' }}>
+                        ✓ No VAT (VAT Exempt)
+                      </span>
+                    )}
                   </div>
                   <div className="form-group">
                     <label className="form-label" htmlFor="date">
@@ -750,12 +795,14 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                         </span>
                       </div>
                     )}
-                    <div className="calc-row">
-                      <span>VAT ({vatPercent || 0}%)</span>
-                      <span>
-                        <strong>{currency === 'USD' ? '$' : '₦'}{fmt(calc.vatAmount)}</strong>
-                      </span>
-                    </div>
+                    {(parseFloat(vatPercent) || 0) > 0 && (
+                      <div className="calc-row">
+                        <span>VAT ({vatPercent}%)</span>
+                        <span>
+                          <strong>{currency === 'USD' ? '$' : '₦'}{fmt(calc.vatAmount)}</strong>
+                        </span>
+                      </div>
+                    )}
                     <div className="calc-row total">
                       <span>GRAND TOTAL</span>
                       <strong>
@@ -863,14 +910,16 @@ const GenerateInvoiceModal = ({ onClose, onSuccess }) => {
                           <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px', color: '#c00000', fontWeight: 'bold' }}>- {currency === 'USD' ? '$' : '₦'}{fmt(calc.discountAmount)}</td>
                         </tr>
                       )}
-                      {/* VAT row */}
-                      <tr style={{ height: '24px' }}>
-                        <td style={styles.pvTd}>{items.length + ((parseFloat(discountPercent) || 0) > 0 ? 2 : 1)}.</td>
-                        <td style={{ ...styles.pvTd, textAlign: 'left', paddingLeft: '8px' }}>VAT OF {vatPercent || 0}%</td>
-                        <td style={styles.pvTd}></td>
-                        <td style={styles.pvTd}></td>
-                        <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px' }}>{currency === 'USD' ? '$' : '₦'}{fmt(calc.vatAmount)}</td>
-                      </tr>
+                      {/* VAT row — only shown if VAT > 0 */}
+                      {(parseFloat(vatPercent) || 0) > 0 && (
+                        <tr style={{ height: '24px' }}>
+                          <td style={styles.pvTd}>{items.length + ((parseFloat(discountPercent) || 0) > 0 ? 2 : 1)}.</td>
+                          <td style={{ ...styles.pvTd, textAlign: 'left', paddingLeft: '8px' }}>VAT OF {vatPercent}%</td>
+                          <td style={styles.pvTd}></td>
+                          <td style={styles.pvTd}></td>
+                          <td style={{ ...styles.pvTd, textAlign: 'right', paddingRight: '8px' }}>{currency === 'USD' ? '$' : '₦'}{fmt(calc.vatAmount)}</td>
+                        </tr>
+                      )}
 
                       {/* Grand Total Footer */}
                       <tr>
